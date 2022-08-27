@@ -1,37 +1,27 @@
 package tokenizer
 
-type TokenType string
+type keyWord string
 
 const (
-	KEYWORD      TokenType = "KEYWORD"
-	SYMBOL       TokenType = "SYMBOL"
-	IDENTIFIER   TokenType = "IDENTIFIER"
-	INT_CONST    TokenType = "INT_CONST"
-	STRING_CONST TokenType = "STRING_CONST"
-)
-
-type Keyword string
-
-const (
-	CLASS       Keyword = "CLASS"
-	METHOD      Keyword = "METHOD"
-	FUNCTION    Keyword = "FUNCTION"
-	CONSTRUCTOR Keyword = "CONSTRUCTOR"
-	INT         Keyword = "INT"
-	BOOLEAN     Keyword = "BOOLEAN"
-	CHAR        Keyword = "CHAR"
-	VOID        Keyword = "VOID"
-	VAR         Keyword = "VAR"
-	STATIC      Keyword = "STATIC"
-	FIELD       Keyword = "FIELD"
-	LET         Keyword = "LET"
-	DO          Keyword = "DO"
-	IF          Keyword = "IF"
-	ELSE        Keyword = "ELSE"
-	WHILE       Keyword = "WHILE"
-	RETURN      Keyword = "RETURN"
-	TRUE        Keyword = "TRUE"
-	FALSE       Keyword = "FALSE"
-	NULL        Keyword = "NULL"
-	THIS        Keyword = "THIS"
+	CLASS       keyWord = "CLASS"
+	METHOD      keyWord = "METHOD"
+	FUNCTION    keyWord = "FUNCTION"
+	CONSTRUCTOR keyWord = "CONSTRUCTOR"
+	INT         keyWord = "INT"
+	BOOLEAN     keyWord = "BOOLEAN"
+	CHAR        keyWord = "CHAR"
+	VOID        keyWord = "VOID"
+	VAR         keyWord = "VAR"
+	STATIC      keyWord = "STATIC"
+	FIELD       keyWord = "FIELD"
+	LET         keyWord = "LET"
+	DO          keyWord = "DO"
+	IF          keyWord = "IF"
+	ELSE        keyWord = "ELSE"
+	WHILE       keyWord = "WHILE"
+	RETURN      keyWord = "RETURN"
+	TRUE        keyWord = "TRUE"
+	FALSE       keyWord = "FALSE"
+	NULL        keyWord = "NULL"
+	THIS        keyWord = "THIS"
 )
