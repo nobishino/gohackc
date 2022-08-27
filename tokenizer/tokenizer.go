@@ -12,6 +12,7 @@ type Tokenizer struct {
 	r             *bufio.Reader
 	hasMoreTokens bool
 	currentToken  token
+	currentLine   string
 }
 
 // NewTokenizer
