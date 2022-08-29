@@ -33,7 +33,7 @@ loop:
 				return err
 			}
 		case IDENTIFIER:
-			if _, err := io.WriteString(dst, t.Identifier()); err != nil {
+			if _, err := io.WriteString(dst, identifierTag(t.Identifier())); err != nil {
 				return err
 			}
 		default:
