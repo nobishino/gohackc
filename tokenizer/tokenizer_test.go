@@ -16,16 +16,16 @@ func TestTokenizer_SmallSource(t *testing.T) {
 		src  string
 		want string
 	}{
-		{"", "<tokens>\n</tokens>"},
-		{"\r \t\n\n\t", "<tokens>\n</tokens>"},
-		{"{", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
-		{"\r\n { /**hello*/\n\r \t//\t }\n", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
-		{"{*", "<tokens>\n<symbol> { </symbol>\n<symbol> * </symbol>\n</tokens>"},
-		{"12345\n", "<tokens>\n<integerConstant> 12345 </integerConstant>\n</tokens>"},
-		{"\"Hello\" \n\t\"World\"\n", "<tokens>\n<stringConstant> Hello </stringConstant>\n<stringConstant> World </stringConstant>\n</tokens>"},
-		{"if", "<tokens>\n<keyword> if </keyword>\n</tokens>"},
-		{"char\nvar", "<tokens>\n<keyword> char </keyword>\n<keyword> var </keyword>\n</tokens>"},
-		{"char\nxyz", "<tokens>\n<keyword> char </keyword>\n<identifier> xyz </identifier>\n</tokens>"},
+		{"", "<tokens>\n</tokens>\n"},
+		{"\r \t\n\n\t", "<tokens>\n</tokens>\n"},
+		{"{", "<tokens>\n<symbol> { </symbol>\n</tokens>\n"},
+		{"\r\n { /**hello*/\n\r \t//\t }\n", "<tokens>\n<symbol> { </symbol>\n</tokens>\n"},
+		{"{*", "<tokens>\n<symbol> { </symbol>\n<symbol> * </symbol>\n</tokens>\n"},
+		{"12345\n", "<tokens>\n<integerConstant> 12345 </integerConstant>\n</tokens>\n"},
+		{"\"Hello\" \n\t\"World\"\n", "<tokens>\n<stringConstant> Hello </stringConstant>\n<stringConstant> World </stringConstant>\n</tokens>\n"},
+		{"if", "<tokens>\n<keyword> if </keyword>\n</tokens>\n"},
+		{"char\nvar", "<tokens>\n<keyword> char </keyword>\n<keyword> var </keyword>\n</tokens>\n"},
+		{"char\nxyz", "<tokens>\n<keyword> char </keyword>\n<identifier> xyz </identifier>\n</tokens>\n"},
 		{" Keyboard.readInt(\"ENTER THE NEXT NUMBER: \");", `<tokens>
 <identifier> Keyboard </identifier>
 <symbol> . </symbol>
@@ -34,7 +34,8 @@ func TestTokenizer_SmallSource(t *testing.T) {
 <stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>
 <symbol> ) </symbol>
 <symbol> ; </symbol>
-</tokens>`},
+</tokens>
+`},
 	}
 	for _, tc := range testcases {
 		t.Run("", func(t *testing.T) {
