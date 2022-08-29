@@ -1,27 +1,26 @@
 package tokenizer
 
 import (
-	"bufio"
 	"io"
 	"strings"
-
-	"github.com/nobishino/textfilter"
 )
 
 type Tokenizer struct {
-	r             *bufio.Reader
 	hasMoreTokens bool
 	currentToken  token
-	currentLine   string
+	sourceCode    string
+	pos           int
 }
 
 // NewTokenizer
 func NewTokenizer(r io.Reader) *Tokenizer {
+	var sb strings.Builder
+	if _, err := io.Copy(&sb, r); err != nil {
+		panic(err)
+	}
 	return &Tokenizer{
-		r: bufio.NewReader(
-			textfilter.NewReader(r, '\r'),
-		),
 		hasMoreTokens: true,
+		sourceCode:    sb.String(),
 	}
 }
 
@@ -32,35 +31,17 @@ func (t *Tokenizer) HasMoreTokens() bool {
 // 次のトークンを取得し、それをカレントトークンとする.
 // HasMoreTokens()がtrueの場合のみ呼び出すことができる
 func (t *Tokenizer) Advance() {
-	r, _, err := t.r.ReadRune()
-	if err == io.EOF {
+	if t.pos >= len(t.sourceCode) {
 		t.hasMoreTokens = false
 		t.currentToken = token{tokenType: EOF}
 		return
 	}
-	if err != nil {
-		panic(err)
-	}
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// skip spaces, tabs, and line separators
-	for isDelimiter(r) {
-		r, _, err = t.r.ReadRune()
-		if err == io.EOF {
-			t.hasMoreTokens = false
-			t.currentToken = token{tokenType: EOF}
-			return
-		}
-		if err != nil {
-			panic(err)
-		}
-	}
 	// symbol
-	if isSymbol(r) {
-		t.currentToken = token{
-			tokenType: SYMBOL,
-			symbol:    string(r),
-		}
-		return
-	}
+
 	// int_const
 	// string_const
 	// keyword
@@ -73,7 +54,7 @@ func isSymbol(r rune) bool {
 }
 
 func isDelimiter(r rune) bool {
-	return strings.ContainsRune("\t\n ", r)
+	return strings.ContainsRune("\r\t\n ", r)
 }
 
 // TokenType
