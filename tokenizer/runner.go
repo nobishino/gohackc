@@ -9,7 +9,7 @@ func ToXML(dst io.Writer, t *Tokenizer) error {
 	if _, err := io.WriteString(dst, "<tokens>\n"); err != nil {
 		return err
 	}
-	defer io.WriteString(dst, "</tokens>")
+	defer io.WriteString(dst, "</tokens>\n")
 loop:
 	for t.HasMoreTokens() {
 		t.Advance()
@@ -44,7 +44,14 @@ loop:
 }
 
 func symbolTag(symbol string) string {
-	return "<symbol> " + symbol + " </symbol>\n"
+	switch symbol {
+	case "<":
+		return "<symbol> &lt; </symbol>\n"
+	case ">":
+		return "<symbol> &gt; </symbol>\n"
+	default:
+		return "<symbol> " + symbol + " </symbol>\n"
+	}
 }
 
 func integerConstantTag(value int) string {
