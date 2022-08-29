@@ -18,6 +18,7 @@ func TestTokenizer_SmallSource(t *testing.T) {
 		{"{", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
 		{"\r\n { /**hello*/\n\r \t//\t }\n", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
 		{"{*", "<tokens>\n<symbol> { </symbol>\n<symbol> * </symbol>\n</tokens>"},
+		{"12345\n", "<tokens>\n<integerConstant> 12345 </integerConstant>\n</tokens>"},
 	}
 	for _, tc := range testcases {
 		t.Run("", func(t *testing.T) {

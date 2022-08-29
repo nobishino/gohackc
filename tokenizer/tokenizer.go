@@ -1,7 +1,9 @@
 package tokenizer
 
 import (
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -57,6 +59,14 @@ func (t *Tokenizer) Advance() {
 		return
 	}
 	// int_const
+	v, ok := t.readIntValue() // TODO: この書き方にまとめたほうがよいかもしれない
+	if ok {
+		t.currentToken = token{
+			tokenType: INT_CONST,
+			intValue:  v,
+		}
+		return
+	}
 	// string_const
 	// keyword
 	// identifier
@@ -151,7 +161,7 @@ func isDelimiter(r rune) bool {
 
 // TokenType
 func (t *Tokenizer) TokenType() tokenType {
-	panic("undefined")
+	return t.currentToken.tokenType
 }
 
 // 以下のメソッドは、 TokenType()の結果がそれぞれの前提とするTokenTypeであるときにのみよびだせる
@@ -166,7 +176,11 @@ func (t *Tokenizer) Keyword() keyWord {
 // Symbol は、カレントトークンのSymbol値を返す
 // TokenType()の値が不適切な場合はpanicする
 func (t *Tokenizer) Symbol() string {
-	panic("undefined")
+	if t.TokenType() != SYMBOL {
+		msg := fmt.Sprintf("current token type must be %q but got %q", SYMBOL, t.TokenType())
+		panic(msg)
+	}
+	return t.currentToken.symbol
 }
 
 func (t *Tokenizer) Identifier() string {
@@ -174,9 +188,31 @@ func (t *Tokenizer) Identifier() string {
 }
 
 func (t *Tokenizer) IntVal() int {
-	panic("undefined")
+	if t.TokenType() != INT_CONST {
+		msg := fmt.Sprintf("current token type must be %q but got %q", INT_CONST, t.TokenType())
+		panic(msg)
+	}
+	return t.currentToken.intValue
 }
 
 func (t *Tokenizer) StringVal() string {
 	panic("undefined")
+}
+
+// 第2戻り値はintegerConstantであるかどうかをかえす
+// falseの場合はソースを読み進めない
+// trueの場合はソースをintegerConstantの最後の文字まで読み終えてその値を返す
+func (t *Tokenizer) readIntValue() (int, bool) {
+	if !strings.ContainsRune("0123456789", t.currentLetter()) {
+		return 0, false
+	}
+	begin := t.pos
+	for !t.atEOF() && strings.ContainsRune("0123456789", t.currentLetter()) {
+		t.pos++
+	}
+	v, err := strconv.Atoi(string(t.sourceCode[begin:t.pos]))
+	if err != nil {
+		panic(err)
+	}
+	return v, true
 }
