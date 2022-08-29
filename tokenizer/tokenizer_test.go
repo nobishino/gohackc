@@ -13,11 +13,14 @@ func TestTokenizer_SmallSource(t *testing.T) {
 		src  string
 		want string
 	}{
-		{"", ""},
-		{"\r \t\n\n\t", ""},
+		{"", "<tokens>\n</tokens>"},
+		{"\r \t\n\n\t", "<tokens>\n</tokens>"},
+		{"{", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
+		{"\r\n { /**hello*/\n\r \t//\t }\n", "<tokens>\n<symbol> { </symbol>\n</tokens>"},
+		{"{*", "<tokens>\n<symbol> { </symbol>\n<symbol> * </symbol>\n</tokens>"},
 	}
 	for _, tc := range testcases {
-		t.Run(tc.src, func(t *testing.T) {
+		t.Run("", func(t *testing.T) {
 			tnzr := tokenizer.NewTokenizer(strings.NewReader(tc.src))
 			var dst strings.Builder
 			if err := tokenizer.ToXML(&dst, tnzr); err != nil {
