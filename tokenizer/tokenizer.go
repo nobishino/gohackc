@@ -76,9 +76,21 @@ func (t *Tokenizer) Advance() {
 		}
 		return
 	}
+	// next token is keyword or identifier here
+	w := t.readWord()
 	// keyword
+	if k, ok := isKeyword(w); ok {
+		t.currentToken = token{
+			tokenType: KEYWORD,
+			keyword:   k,
+		}
+		return
+	}
 	// identifier
-	panic("undefined")
+	t.currentToken = token{
+		tokenType:  IDENTIFIER,
+		identifier: w,
+	}
 }
 
 func (t *Tokenizer) atEOF() bool {
@@ -252,4 +264,16 @@ func (t *Tokenizer) readStringConstant() (string, bool) {
 		t.pos++
 	}
 	panic(`string constant does not closed`)
+}
+
+func (t *Tokenizer) readWord() string {
+	if t.atEOF() {
+		panic("cannot happen")
+	}
+	begin := t.pos
+	for !t.atEOF() && !t.atDelimiters() {
+		t.pos++
+	}
+	w := t.sourceCode[begin:t.pos]
+	return w
 }

@@ -3,7 +3,7 @@ package tokenizer
 type token struct {
 	tokenType
 	symbol      string
-	keyword     string
+	keyword     keyWord
 	intValue    int
 	stringValue string
 	identifier  string
