@@ -28,6 +28,16 @@ loop:
 			if _, err := io.WriteString(dst, stringConstantTag(t.StringVal())); err != nil {
 				return err
 			}
+		case KEYWORD:
+			if _, err := io.WriteString(dst, keywordTag(t.Keyword())); err != nil {
+				return err
+			}
+		case IDENTIFIER:
+			if _, err := io.WriteString(dst, t.Identifier()); err != nil {
+				return err
+			}
+		default:
+			panic("unexpected token type" + t.TokenType())
 		}
 	}
 	return nil
@@ -43,4 +53,12 @@ func integerConstantTag(value int) string {
 
 func stringConstantTag(value string) string {
 	return "<stringConstant> " + value + " </stringConstant>\n"
+}
+
+func keywordTag(keyword keyWord) string {
+	return "<keyword> " + string(keyword) + " </keyword>\n"
+}
+
+func identifierTag(ident string) string {
+	return "<identifier> " + ident + " </identifier>\n"
 }
