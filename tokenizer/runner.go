@@ -1,6 +1,9 @@
 package tokenizer
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 func ToXML(dst io.Writer, t *Tokenizer) error {
 	if _, err := io.WriteString(dst, "<tokens>\n"); err != nil {
@@ -17,6 +20,10 @@ loop:
 			if _, err := io.WriteString(dst, symbolTag(t.Symbol())); err != nil {
 				return err
 			}
+		case INT_CONST:
+			if _, err := io.WriteString(dst, integerConstantTag(t.IntVal())); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -24,4 +31,8 @@ loop:
 
 func symbolTag(symbol string) string {
 	return "<symbol> " + symbol + " </symbol>\n"
+}
+
+func integerConstantTag(value int) string {
+	return fmt.Sprintf("<integerConstant> %d </integerConstant>\n", value)
 }
