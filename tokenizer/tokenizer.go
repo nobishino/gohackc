@@ -28,21 +28,29 @@ func (t *Tokenizer) HasMoreTokens() bool {
 	return t.hasMoreTokens
 }
 
+func (t *Tokenizer) currentLetter() rune {
+	return rune(t.sourceCode[t.pos])
+}
+
 // 次のトークンを取得し、それをカレントトークンとする.
 // HasMoreTokens()がtrueの場合のみ呼び出すことができる
 func (t *Tokenizer) Advance() {
+	// skip spaces, tabs, and line separators
 	t.skipDelimiters()
 	if t.pos >= len(t.sourceCode) {
 		t.hasMoreTokens = false
 		t.currentToken = token{tokenType: EOF}
 		return
 	}
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// skip spaces, tabs, and line separators
 	// symbol
-
+	if isSymbol(t.currentLetter()) {
+		t.currentToken = token{
+			tokenType: SYMBOL,
+			symbol:    string(t.currentLetter()),
+		}
+		t.pos++
+		return
+	}
 	// int_const
 	// string_const
 	// keyword
