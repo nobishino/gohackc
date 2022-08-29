@@ -151,7 +151,7 @@ func isDelimiter(r rune) bool {
 
 // TokenType
 func (t *Tokenizer) TokenType() tokenType {
-	panic("undefined")
+	return t.currentToken.tokenType
 }
 
 // 以下のメソッドは、 TokenType()の結果がそれぞれの前提とするTokenTypeであるときにのみよびだせる
@@ -166,7 +166,10 @@ func (t *Tokenizer) Keyword() keyWord {
 // Symbol は、カレントトークンのSymbol値を返す
 // TokenType()の値が不適切な場合はpanicする
 func (t *Tokenizer) Symbol() string {
-	panic("undefined")
+	if t.TokenType() != SYMBOL {
+		panic("current token type = " + t.TokenType())
+	}
+	return t.currentToken.symbol
 }
 
 func (t *Tokenizer) Identifier() string {

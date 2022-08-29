@@ -10,11 +10,11 @@ func ToXML(dst io.Writer, t *Tokenizer) error {
 loop:
 	for t.HasMoreTokens() {
 		t.Advance()
-		switch t.currentToken.tokenType {
+		switch t.TokenType() {
 		case EOF:
 			break loop
 		case SYMBOL:
-			if _, err := io.WriteString(dst, symbolTag(t.currentToken)); err != nil {
+			if _, err := io.WriteString(dst, symbolTag(t.Symbol())); err != nil {
 				return err
 			}
 		}
@@ -22,6 +22,6 @@ loop:
 	return nil
 }
 
-func symbolTag(tk token) string {
-	return "<symbol> " + tk.symbol + " </symbol>\n"
+func symbolTag(symbol string) string {
+	return "<symbol> " + symbol + " </symbol>\n"
 }
