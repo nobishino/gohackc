@@ -31,6 +31,9 @@ func (t *Tokenizer) HasMoreTokens() bool {
 }
 
 func (t *Tokenizer) currentLetter() rune {
+	if t.atEOF() {
+		return 0
+	}
 	return rune(t.sourceCode[t.pos])
 }
 
@@ -263,7 +266,7 @@ func (t *Tokenizer) readStringConstant() (string, bool) {
 		}
 		t.pos++
 	}
-	panic(`string constant does not closed`)
+	panic(`string constant does not closed:` + t.String())
 }
 
 func (t *Tokenizer) readWord() string {
@@ -271,9 +274,19 @@ func (t *Tokenizer) readWord() string {
 		panic("cannot happen")
 	}
 	begin := t.pos
-	for !t.atEOF() && !t.atDelimiters() {
+	for !t.atEOF() && !t.atDelimiters() && !isSymbol(t.currentLetter()) {
 		t.pos++
 	}
 	w := t.sourceCode[begin:t.pos]
 	return w
+}
+
+func (t *Tokenizer) String() string {
+	return fmt.Sprintf(`{
+	sourceCode:	%q,
+	cursor position:	%d/%d,
+	current token:	%v,
+	current letter: %c,
+}`,
+		t.sourceCode, t.pos, len(t.sourceCode), t.currentToken, t.currentLetter())
 }
