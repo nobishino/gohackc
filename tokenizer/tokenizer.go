@@ -31,6 +31,7 @@ func (t *Tokenizer) HasMoreTokens() bool {
 // 次のトークンを取得し、それをカレントトークンとする.
 // HasMoreTokens()がtrueの場合のみ呼び出すことができる
 func (t *Tokenizer) Advance() {
+	t.skipDelimiters()
 	if t.pos >= len(t.sourceCode) {
 		t.hasMoreTokens = false
 		t.currentToken = token{tokenType: EOF}
@@ -51,6 +52,12 @@ func (t *Tokenizer) Advance() {
 
 func isSymbol(r rune) bool {
 	return strings.ContainsRune("{}()[].,;+-*/&|<>=~", r)
+}
+
+func (t *Tokenizer) skipDelimiters() {
+	for t.pos < len(t.sourceCode) && isDelimiter(rune(t.sourceCode[t.pos])) {
+		t.pos++
+	}
 }
 
 func isDelimiter(r rune) bool {
