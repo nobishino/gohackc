@@ -31,6 +31,9 @@ func (t *Tokenizer) HasMoreTokens() bool {
 }
 
 func (t *Tokenizer) currentLetter() rune {
+	if t.atEOF() {
+		return 0
+	}
 	return rune(t.sourceCode[t.pos])
 }
 
@@ -76,9 +79,21 @@ func (t *Tokenizer) Advance() {
 		}
 		return
 	}
+	// next token is keyword or identifier here
+	w := t.readWord()
 	// keyword
+	if k, ok := isKeyword(w); ok {
+		t.currentToken = token{
+			tokenType: KEYWORD,
+			keyword:   k,
+		}
+		return
+	}
 	// identifier
-	panic("undefined")
+	t.currentToken = token{
+		tokenType:  IDENTIFIER,
+		identifier: w,
+	}
 }
 
 func (t *Tokenizer) atEOF() bool {
@@ -251,5 +266,27 @@ func (t *Tokenizer) readStringConstant() (string, bool) {
 		}
 		t.pos++
 	}
-	panic(`string constant does not closed`)
+	panic(`string constant does not closed:` + t.String())
+}
+
+func (t *Tokenizer) readWord() string {
+	if t.atEOF() {
+		panic("cannot happen")
+	}
+	begin := t.pos
+	for !t.atEOF() && !t.atDelimiters() && !isSymbol(t.currentLetter()) {
+		t.pos++
+	}
+	w := t.sourceCode[begin:t.pos]
+	return w
+}
+
+func (t *Tokenizer) String() string {
+	return fmt.Sprintf(`{
+	sourceCode:	%q,
+	cursor position:	%d/%d,
+	current token:	%v,
+	current letter: %c,
+}`,
+		t.sourceCode, t.pos, len(t.sourceCode), t.currentToken, t.currentLetter())
 }
