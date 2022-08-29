@@ -68,6 +68,14 @@ func (t *Tokenizer) Advance() {
 		return
 	}
 	// string_const
+	s, ok := t.readStringConstant()
+	if ok {
+		t.currentToken = token{
+			tokenType:   STRING_CONST,
+			stringValue: s,
+		}
+		return
+	}
 	// keyword
 	// identifier
 	panic("undefined")
@@ -170,7 +178,11 @@ func (t *Tokenizer) TokenType() tokenType {
 // Keyword は、カレントトークンのKeyword値を返す
 // TokenType()の値が不適切な場合はpanicする
 func (t *Tokenizer) Keyword() keyWord {
-	panic("undefined")
+	if t.TokenType() != KEYWORD {
+		msg := fmt.Sprintf("current token type must be %q but got %q", KEYWORD, t.TokenType())
+		panic(msg)
+	}
+	return keyWord(t.currentToken.keyword)
 }
 
 // Symbol は、カレントトークンのSymbol値を返す
@@ -184,7 +196,11 @@ func (t *Tokenizer) Symbol() string {
 }
 
 func (t *Tokenizer) Identifier() string {
-	panic("undefined")
+	if t.TokenType() != IDENTIFIER {
+		msg := fmt.Sprintf("current token type must be %q but got %q", IDENTIFIER, t.TokenType())
+		panic(msg)
+	}
+	return t.currentToken.identifier
 }
 
 func (t *Tokenizer) IntVal() int {
@@ -196,7 +212,11 @@ func (t *Tokenizer) IntVal() int {
 }
 
 func (t *Tokenizer) StringVal() string {
-	panic("undefined")
+	if t.TokenType() != STRING_CONST {
+		msg := fmt.Sprintf("current token type must be %q but got %q", STRING_CONST, t.TokenType())
+		panic(msg)
+	}
+	return t.currentToken.stringValue
 }
 
 // 第2戻り値はintegerConstantであるかどうかをかえす
@@ -215,4 +235,21 @@ func (t *Tokenizer) readIntValue() (int, bool) {
 		panic(err)
 	}
 	return v, true
+}
+
+func (t *Tokenizer) readStringConstant() (string, bool) {
+	if t.atEOF() || t.currentLetter() != '"' {
+		return "", false
+	}
+	t.pos++
+	begin := t.pos
+	for !t.atEOF() {
+		if t.currentLetter() == '"' {
+			value := string(t.sourceCode[begin:t.pos])
+			t.pos++
+			return value, true
+		}
+		t.pos++
+	}
+	panic(`string constant does not closed`)
 }
