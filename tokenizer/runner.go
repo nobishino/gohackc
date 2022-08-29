@@ -24,6 +24,10 @@ loop:
 			if _, err := io.WriteString(dst, integerConstantTag(t.IntVal())); err != nil {
 				return err
 			}
+		case STRING_CONST:
+			if _, err := io.WriteString(dst, stringConstantTag(t.StringVal())); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -35,4 +39,8 @@ func symbolTag(symbol string) string {
 
 func integerConstantTag(value int) string {
 	return fmt.Sprintf("<integerConstant> %d </integerConstant>\n", value)
+}
+
+func stringConstantTag(value string) string {
+	return "<stringConstant> " + value + " </stringConstant>\n"
 }
