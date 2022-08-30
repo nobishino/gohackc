@@ -36,7 +36,7 @@ func TestTokenizer_SmallSource(t *testing.T) {
 <symbol> ; </symbol>
 </tokens>
 `},
-	}
+		{"/**\n*/", "<tokens>\n</tokens>\n"}}
 	for _, tc := range testcases {
 		t.Run("", func(t *testing.T) {
 			tnzr := tokenizer.NewTokenizer(strings.NewReader(tc.src))
@@ -64,7 +64,7 @@ func TestTokenizer_RealSource(t *testing.T) {
 		{"ExpressionLessSquare/SquareGame.jack", "ExpressionLessSquare/SquareGameT.xml"},
 		{"Square/Main.jack", "Square/MainT.xml"},
 		{"Square/Square.jack", "Square/SquareT.xml"},
-		// {"Square/SquareGame.jack", "Square/SquareGameT.xml"},
+		{"Square/SquareGame.jack", "Square/SquareGameT.xml"},
 	}
 	const testDir = "../testdata"
 	for _, tc := range testcases {
