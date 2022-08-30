@@ -59,6 +59,12 @@ func TestTokenizer_RealSource(t *testing.T) {
 		wantFile string
 	}{
 		{"ArrayTest/Main.jack", "ArrayTest/MainT.xml"},
+		{"ExpressionLessSquare/Main.jack", "ExpressionLessSquare/MainT.xml"},
+		{"ExpressionLessSquare/Square.jack", "ExpressionLessSquare/SquareT.xml"},
+		{"ExpressionLessSquare/SquareGame.jack", "ExpressionLessSquare/SquareGameT.xml"},
+		{"Square/Main.jack", "Square/MainT.xml"},
+		{"Square/Square.jack", "Square/SquareT.xml"},
+		// {"Square/SquareGame.jack", "Square/SquareGameT.xml"},
 	}
 	const testDir = "../testdata"
 	for _, tc := range testcases {
