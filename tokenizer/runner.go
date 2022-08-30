@@ -49,6 +49,8 @@ func symbolTag(symbol string) string {
 		return "<symbol> &lt; </symbol>\n"
 	case ">":
 		return "<symbol> &gt; </symbol>\n"
+	case "&":
+		return "<symbol> &amp; </symbol>\n"
 	default:
 		return "<symbol> " + symbol + " </symbol>\n"
 	}

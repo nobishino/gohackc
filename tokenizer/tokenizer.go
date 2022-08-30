@@ -106,9 +106,9 @@ func isSymbol(r rune) bool {
 
 func (t *Tokenizer) skipDelimitersOrComments() {
 	for t.atCommentStart() || t.atDelimiters() {
-		t.skipDelimiters()
-		t.skipLineComment()
 		t.skipBlockComment()
+		t.skipLineComment()
+		t.skipDelimiters()
 	}
 }
 
@@ -174,6 +174,10 @@ func (t *Tokenizer) skipUntilBlockCommentEnd() {
 		if t.atBlockCommentEnd() {
 			return
 		}
+		t.pos++
+	}
+	if t.atBlockCommentEnd() { // blockコメントが終わったときにソースコードの終端であるパターンに対応する FIXME: きれいにする
+		return
 	}
 	panic("Block comment begins, but does not ends properly")
 }
