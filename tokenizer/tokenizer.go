@@ -186,7 +186,7 @@ func isDelimiter(r rune) bool {
 	return strings.ContainsRune("\r\t\n ", r)
 }
 
-// TokenType
+// TokenType は、カレントトークンのタイプを返す
 func (t *Tokenizer) TokenType() tokenType {
 	return t.currentToken.tokenType
 }
