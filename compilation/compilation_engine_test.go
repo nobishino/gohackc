@@ -23,6 +23,7 @@ func TestCompilationEngine(t *testing.T) {
 		{"bare_class", OK},
 		{"bare_class_error", NG},
 		{"class_var_dec", OK},
+		{"subroutine_dec", OK},
 	}
 	for _, tc := range testcase {
 		t.Run(tc.testfile, func(t *testing.T) {
