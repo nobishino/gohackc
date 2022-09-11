@@ -1,0 +1,10 @@
+-- source.jack --
+class Counter {
+}
+-- expect.xml --
+<class>
+  <keyword> class </keyword>
+  <identifier> Counter </identifier>
+  <symbol> { </symbol>
+  <symbol> } </symbol>
+</class>

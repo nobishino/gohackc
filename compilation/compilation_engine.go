@@ -45,7 +45,7 @@ func (e *Engine) CompileClass() {
 		e.addError(errors.Errorf("expect identifier as className, but got %q", e.tz.TokenType()))
 		return
 	}
-	e.putIdentifierTag("Main")
+	e.putIdentifierTag(e.tz.Identifier())
 	e.advance()
 
 	if ok := e.eat("{"); !ok {
