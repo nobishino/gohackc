@@ -53,6 +53,12 @@ func (e *Engine) CompileClass() {
 		return
 	}
 	e.putSymbolTag("{")
+
+	// TODO: classの中身をparseする
+	if ok := e.eat("}"); !ok {
+		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "{"))
+		return
+	}
 	e.putSymbolTag("}")
 }
 
