@@ -64,7 +64,7 @@ func stringConstantTag(value string) string {
 	return "<stringConstant> " + value + " </stringConstant>\n"
 }
 
-func keywordTag(keyword keyWord) string {
+func keywordTag(keyword KeyWord) string {
 	return "<keyword> " + string(keyword) + " </keyword>\n"
 }
 

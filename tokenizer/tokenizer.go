@@ -186,7 +186,7 @@ func isDelimiter(r rune) bool {
 	return strings.ContainsRune("\r\t\n ", r)
 }
 
-// TokenType
+// TokenType は、カレントトークンのタイプを返す
 func (t *Tokenizer) TokenType() tokenType {
 	return t.currentToken.tokenType
 }
@@ -196,12 +196,12 @@ func (t *Tokenizer) TokenType() tokenType {
 
 // Keyword は、カレントトークンのKeyword値を返す
 // TokenType()の値が不適切な場合はpanicする
-func (t *Tokenizer) Keyword() keyWord {
+func (t *Tokenizer) Keyword() KeyWord {
 	if t.TokenType() != KEYWORD {
 		msg := fmt.Sprintf("current token type must be %q but got %q", KEYWORD, t.TokenType())
 		panic(msg)
 	}
-	return keyWord(t.currentToken.keyword)
+	return KeyWord(t.currentToken.keyword)
 }
 
 // Symbol は、カレントトークンのSymbol値を返す
