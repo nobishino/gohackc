@@ -1,0 +1,24 @@
+-- source.jack --
+class Counter {
+  static int count;
+  field Time time;
+}
+-- expect.xml --
+<class>
+  <keyword> class </keyword>
+  <identifier> Counter </identifier>
+  <symbol> { </symbol>
+  <classVarDec>
+    <keyword> static </keyword>
+    <keyword> int </keyword>
+    <identifier> count </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
+  <classVarDec>
+    <keyword> field </keyword>
+    <identifier> Time </identifier>
+    <identifier> time </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
+  <symbol> } </symbol>
+</class>

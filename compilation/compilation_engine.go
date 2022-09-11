@@ -45,7 +45,7 @@ func (e *Engine) CompileClass() {
 		e.addError(errors.Errorf("expect identifier as className, but got %q", e.tz.TokenType()))
 		return
 	}
-	e.putIdentifierTag("Main")
+	e.putIdentifierTag(e.tz.Identifier())
 	e.advance()
 
 	if ok := e.eat("{"); !ok {
@@ -54,22 +54,78 @@ func (e *Engine) CompileClass() {
 	}
 	e.putSymbolTag("{")
 
-	// TODO: classの中身をparseする
+ParseClassVarDecs:
+	for e.tz.TokenType() == tokenizer.KEYWORD {
+		switch e.tz.Keyword() {
+		case "static", "field":
+			e.compileClassVarDec()
+		default:
+			break ParseClassVarDecs
+		}
+	}
+
 	if ok := e.eat("}"); !ok {
-		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "{"))
+		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "}"))
 		return
 	}
 	e.putSymbolTag("}")
 }
 
 // classVarDec = ('static' | 'field' ) type varName (',' varName)* ';'
-func (e *Engine) compileClassVarDec() error {
-	return nil
+func (e *Engine) compileClassVarDec() {
+	defer e.putNonTerminalTag("classVarDec")()
+	kw := e.tz.Keyword()
+	e.putKeywordTag(string(kw))
+	e.advance()
+
+	// typeはKeywordとIdentifierどちらかがくる
+	switch tokenType := e.tz.TokenType(); tokenType {
+	case tokenizer.KEYWORD:
+		classVarType, ok := e.expectKeyword()
+		if !ok {
+			panic("its bug")
+		}
+		e.putKeywordTag(classVarType)
+	case tokenizer.IDENTIFIER:
+		classVarType, ok := e.expectIdentifier()
+		if !ok {
+			panic("its bug")
+		}
+		e.putIdentifierTag(classVarType)
+	default:
+		e.addError(errors.Errorf("unexpected type: %q", tokenType))
+		return
+	}
+
+ParseVarNames:
+	for {
+		ident, ok := e.expectIdentifier()
+		if !ok {
+			return
+		}
+		e.putIdentifierTag(ident)
+
+		if e.tz.TokenType() != tokenizer.SYMBOL {
+			e.addError(errors.Errorf("expect symbol (; or ,), but got type %q", e.tz.TokenType()))
+			return
+		}
+
+		switch s := e.tz.Symbol(); s {
+		case ";":
+			e.advance()
+			e.putSymbolTag(s)
+			break ParseVarNames
+		case ",":
+			e.advance()
+		default:
+			e.addError(errors.Errorf("unexpected symbol value: %q", s))
+			return
+		}
+	}
 }
 
 // subroutineDec = ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
-func (e *Engine) compileSubroutine() error {
-	return nil
+func (e *Engine) compileSubroutine() {
 }
 
 func (e *Engine) compileParameterList() error {
@@ -138,6 +194,58 @@ func (e *Engine) eat(value string) bool {
 		e.addError(errors.Errorf("eat cannot used with token type %q", kind))
 	}
 	return false
+}
+
+// カレントトークンがvalueという値のKeywordである場合はtrueを返して次のトークンに進む
+// そうでない場合はエラーを追加してfalseを返す
+func (e *Engine) eatKeyword(value string) bool {
+	if e.tz.TokenType() != tokenizer.KEYWORD {
+		e.addError(errors.Errorf("eatKeyword() was given token type %q", e.tz.TokenType()))
+		return false
+	}
+	if e.tz.Keyword() != tokenizer.KeyWord(value) {
+		e.addError(errors.Errorf("eatKeyword() expect %q, but got %q", value, e.tz.Keyword()))
+		return false
+	}
+	e.advance()
+	return true
+}
+
+// カレントトークンがKeywordである場合はその値とtrueを返して次のトークンに進む
+// そうでない場合はエラーを追加してfalseを返す
+func (e *Engine) expectKeyword() (string, bool) {
+	if e.tz.TokenType() != tokenizer.KEYWORD {
+		e.addError(errors.Errorf("expectKeyword() was given token type %q", e.tz.TokenType()))
+		return "", false
+	}
+	value := string(e.tz.Keyword())
+	e.advance()
+	return value, true
+}
+
+func (e *Engine) eatSymbol(value string) bool {
+	if e.tz.TokenType() != tokenizer.SYMBOL {
+		e.addError(errors.Errorf("eatSymbol() was given token type %q", e.tz.TokenType()))
+		return false
+	}
+	if e.tz.Symbol() != value {
+		e.addError(errors.Errorf("eatSymbol() expect %q, but got %q", value, e.tz.Symbol()))
+		return false
+	}
+	e.advance()
+	return true
+}
+
+// カレントトークンがIdentiferである場合はその値とtrueをかえして次のトークンに進む
+// そうでない場合は何もせずエラーを追加してfalseを返す
+func (e *Engine) expectIdentifier() (string, bool) {
+	if e.tz.TokenType() != tokenizer.IDENTIFIER {
+		e.addError(errors.Errorf("eatIdentifier() was given token type %q", e.tz.TokenType()))
+		return "", false
+	}
+	value := e.tz.Identifier()
+	e.advance()
+	return value, true
 }
 
 func (e *Engine) addError(err error) {
