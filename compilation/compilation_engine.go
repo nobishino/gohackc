@@ -337,7 +337,7 @@ func (e *Engine) Error() error {
 
 func (e *Engine) advance() {
 	e.tz.Advance()
-	e.logCurrentToken()
+	// e.logCurrentToken()
 }
 
 func (e *Engine) logCurrentToken() {
