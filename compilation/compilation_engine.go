@@ -12,9 +12,10 @@ import (
 )
 
 type Engine struct {
-	tz   *tokenizer.Tokenizer
-	dst  io.Writer
-	errs error
+	tz    *tokenizer.Tokenizer
+	dst   io.Writer
+	errs  error
+	depth int
 }
 
 func New(src io.Reader, dst io.Writer) *Engine {
@@ -38,20 +39,21 @@ func (e *Engine) CompileClass() {
 	closer := e.putNonTerminalTag("class")
 	defer closer()
 
-	e.putTerminalTag("keyword", "class")
+	e.putKeywordTag("class")
 
 	if e.tz.TokenType() != tokenizer.IDENTIFIER {
 		e.addError(errors.Errorf("expect identifier as className, but got %q", e.tz.TokenType()))
 		return
 	}
-	e.putTerminalTag("identifier", "Main")
+	e.putIdentifierTag("Main")
 	e.advance()
 
 	if ok := e.eat("{"); !ok {
 		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "{"))
 		return
 	}
-
+	e.putSymbolTag("{")
+	e.putSymbolTag("}")
 }
 
 // classVarDec = ('static' | 'field' ) type varName (',' varName)* ';'
@@ -130,26 +132,6 @@ func (e *Engine) eat(value string) bool {
 		panic("unexpected kind " + string(kind))
 	}
 	return false
-}
-
-func (e *Engine) putNonTerminalTag(name string) func() {
-	noop := func() {}
-	if _, err := io.WriteString(e.dst, "<"+name+">\n"); err != nil {
-		e.addError(errors.WithStack(err))
-		return noop
-	}
-	return func() {
-		if _, err := io.WriteString(e.dst, "</"+name+">\n"); err != nil {
-			e.addError(errors.WithStack(err))
-		}
-	}
-}
-
-func (e *Engine) putTerminalTag(name, value string) {
-	if _, err := io.WriteString(e.dst, "<"+name+"> "+value+"</"+name+">\n"); err != nil {
-		e.addError(errors.WithStack(err))
-		return
-	}
 }
 
 func (e *Engine) addError(err error) {
