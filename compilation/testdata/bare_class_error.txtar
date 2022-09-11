@@ -1,0 +1,4 @@
+{}のブロックが閉じられていないのでerrorを返す
+-- source.jack --
+class Main {
+-- expect.xml --

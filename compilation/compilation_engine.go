@@ -133,15 +133,15 @@ func (e *Engine) eat(value string) bool {
 		}
 		return true
 	case tokenizer.IDENTIFIER, tokenizer.INT_CONST, tokenizer.STRING_CONST, tokenizer.EOF:
-		panic("cannot use with " + string(kind))
+		e.addError(errors.Errorf("eat cannot used with token type %q", kind))
 	default:
-		panic("unexpected kind " + string(kind))
+		e.addError(errors.Errorf("eat cannot used with token type %q", kind))
 	}
 	return false
 }
 
 func (e *Engine) addError(err error) {
-	e.errs = multierror.Append(e.errs, errors.WithStack(err))
+	e.errs = multierror.Append(e.errs, err)
 }
 
 func (e *Engine) Error() error {

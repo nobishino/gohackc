@@ -21,6 +21,7 @@ func TestCompilationEngine(t *testing.T) {
 		shouldError bool
 	}{
 		{"bare_class", OK},
+		{"bare_class_error", NG},
 	}
 	for _, tc := range testcase {
 		t.Run(tc.testfile, func(t *testing.T) {
@@ -32,6 +33,9 @@ func TestCompilationEngine(t *testing.T) {
 
 			if err := e.Error(); (err != nil) != tc.shouldError {
 				t.Fatal(err)
+			}
+			if tc.shouldError {
+				return
 			}
 
 			got := dst.String()
