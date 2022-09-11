@@ -1,10 +1,17 @@
 -- source.jack --
 class Counter {
+  static int count;
 }
 -- expect.xml --
 <class>
   <keyword> class </keyword>
   <identifier> Counter </identifier>
   <symbol> { </symbol>
+  <classVarDec>
+    <keyword> static </keyword>
+    <identifier> int </identifier>
+    <identifier> count </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
   <symbol> } </symbol>
 </class>
