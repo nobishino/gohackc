@@ -28,8 +28,9 @@ func TestCompilationEngine(t *testing.T) {
 			var dst strings.Builder
 			e := compilation.New(src, &dst)
 
-			err := e.CompileClass()
-			if (err != nil) != tc.shouldError {
+			e.CompileClass()
+
+			if err := e.Error(); (err != nil) != tc.shouldError {
 				t.Fatal(err)
 			}
 

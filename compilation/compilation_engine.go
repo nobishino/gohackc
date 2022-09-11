@@ -2,27 +2,56 @@
 package compilation
 
 import (
+	"fmt"
 	"io"
+	"log"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/nobishino/gohackc/tokenizer"
+	"github.com/pkg/errors"
 )
 
 type Engine struct {
-	tz  *tokenizer.Tokenizer
-	dst io.Writer
+	tz   *tokenizer.Tokenizer
+	dst  io.Writer
+	errs error
 }
 
 func New(src io.Reader, dst io.Writer) *Engine {
 	tz := tokenizer.NewTokenizer(src)
-	return &Engine{
+	e := &Engine{
 		tz:  tz,
 		dst: dst,
 	}
+	if e.tz.HasMoreTokens() {
+		e.advance()
+	}
+	return e
 }
 
 // class = 'class' className '{' classVarDec* subroutineDec* '}'
-func (e *Engine) CompileClass() error {
-	return nil
+func (e *Engine) CompileClass() {
+	if ok := e.eat("class"); !ok {
+		e.addError(errors.Errorf("error: expect keyword %q but currnt token is not", "class"))
+		return
+	}
+	closer := e.putNonTerminalTag("class")
+	defer closer()
+
+	e.putTerminalTag("keyword", "class")
+
+	if e.tz.TokenType() != tokenizer.IDENTIFIER {
+		e.addError(errors.Errorf("expect identifier as className, but got %q", e.tz.TokenType()))
+		return
+	}
+	e.putTerminalTag("identifier", "Main")
+	e.advance()
+
+	if ok := e.eat("{"); !ok {
+		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "{"))
+		return
+	}
+
 }
 
 // classVarDec = ('static' | 'field' ) type varName (',' varName)* ';'
@@ -77,4 +106,81 @@ func (e *Engine) compileTerm() error {
 
 func (e *Engine) compileExpressionList() error {
 	return nil
+}
+
+func (e *Engine) eat(value string) bool {
+	switch kind := e.tz.TokenType(); kind {
+	case tokenizer.KEYWORD:
+		if e.tz.Keyword() == tokenizer.KeyWord(value) {
+			if e.tz.HasMoreTokens() {
+				e.advance()
+			}
+			return true
+		}
+	case tokenizer.SYMBOL:
+		if e.tz.Symbol() == value {
+			if e.tz.HasMoreTokens() {
+				e.advance()
+			}
+		}
+		return true
+	case tokenizer.IDENTIFIER, tokenizer.INT_CONST, tokenizer.STRING_CONST, tokenizer.EOF:
+		panic("cannot use with " + string(kind))
+	default:
+		panic("unexpected kind " + string(kind))
+	}
+	return false
+}
+
+func (e *Engine) putNonTerminalTag(name string) func() {
+	noop := func() {}
+	if _, err := io.WriteString(e.dst, "<"+name+">\n"); err != nil {
+		e.addError(errors.WithStack(err))
+		return noop
+	}
+	return func() {
+		if _, err := io.WriteString(e.dst, "</"+name+">\n"); err != nil {
+			e.addError(errors.WithStack(err))
+		}
+	}
+}
+
+func (e *Engine) putTerminalTag(name, value string) {
+	if _, err := io.WriteString(e.dst, "<"+name+"> "+value+"</"+name+">\n"); err != nil {
+		e.addError(errors.WithStack(err))
+		return
+	}
+}
+
+func (e *Engine) addError(err error) {
+	e.errs = multierror.Append(e.errs, errors.WithStack(err))
+}
+
+func (e *Engine) Error() error {
+	return e.errs
+}
+
+func (e *Engine) advance() {
+	e.tz.Advance()
+	e.logCurrentToken()
+}
+
+func (e *Engine) logCurrentToken() {
+	prefix := "[logCurrentToken] "
+	switch tp := e.tz.TokenType(); tp {
+	case tokenizer.KEYWORD:
+		log.Printf(prefix+"Keyword: %q", e.tz.Keyword())
+	case tokenizer.SYMBOL:
+		log.Printf(prefix+"Symbol: %q", e.tz.Symbol())
+	case tokenizer.IDENTIFIER:
+		log.Printf(prefix+"Identifier: %q", e.tz.Identifier())
+	case tokenizer.INT_CONST:
+		log.Printf(prefix+"Integer Constant: %q", e.tz.Identifier())
+	case tokenizer.STRING_CONST:
+		log.Printf(prefix+"String constant: %q", e.tz.Identifier())
+	case tokenizer.EOF:
+		log.Print(prefix + "EOF")
+	default:
+		panic(fmt.Sprintf(prefix+"unexpected token type %q", tp))
+	}
 }

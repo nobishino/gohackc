@@ -5,7 +5,7 @@ import "strconv"
 type token struct {
 	tokenType
 	symbol      string
-	keyword     keyWord
+	keyword     KeyWord
 	intValue    int
 	stringValue string
 	identifier  string
