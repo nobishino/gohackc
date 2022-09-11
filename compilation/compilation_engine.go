@@ -64,6 +64,16 @@ ParseClassVarDecs:
 		}
 	}
 
+	for e.tz.TokenType() == tokenizer.KEYWORD {
+		switch e.tz.Keyword() {
+		case "constructor", "function", "method":
+			e.compileSubroutineDec()
+		default:
+			e.addError(errors.Errorf("unexpected keyword: %q", e.tz.Keyword()))
+			return
+		}
+	}
+
 	if ok := e.eat("}"); !ok {
 		e.addError(errors.Errorf("error: expect symbol %q but currnt token is not", "}"))
 		return
@@ -125,19 +135,80 @@ ParseVarNames:
 }
 
 // subroutineDec = ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
-func (e *Engine) compileSubroutine() {
+func (e *Engine) compileSubroutineDec() {
+	closer := e.putNonTerminalTag("subroutineDec")
+
+	kw, ok := e.expectKeyword()
+	if !ok {
+		return
+	}
+	e.putKeywordTag(kw)
+
+	switch tokenType := e.tz.TokenType(); tokenType {
+	case tokenizer.KEYWORD:
+		kw, _ := e.expectKeyword()
+		switch kw {
+		case "void", "int", "char", "boolean":
+			e.putKeywordTag(kw)
+		default:
+			e.addError(errors.Errorf("unexpected keyword: %q", kw))
+		}
+	case tokenizer.IDENTIFIER:
+		// TODO: implement <- classNameのばあい
+	default:
+		e.addError(errors.Errorf("unexpected token type %q", tokenType))
+	}
+
+	subroutineName, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(subroutineName)
+
+	if !e.eatSymbol("(") {
+		return
+	}
+	e.putSymbolTag("(")
+	e.compileParameterList()
+	if !e.eatSymbol(")") {
+		return
+	}
+	e.putSymbolTag(")")
+
+	closeSubroutineBody := e.putNonTerminalTag("subroutineBody")
+
+	if !e.eatSymbol("{") {
+		return
+	}
+	e.putSymbolTag("{")
+
+	// TODO: varDec*
+	e.compileStatements()
+
+	if !e.eatSymbol("}") {
+		return
+	}
+	e.putSymbolTag("}")
+
+	closeSubroutineBody()
+
+	closer()
 }
 
-func (e *Engine) compileParameterList() error {
-	return nil
+func (e *Engine) compileParameterList() {
+	// TODO: implement
+	defer e.putNonTerminalTag("parameterList")()
 }
 
 func (e *Engine) compileVarDec() error {
 	return nil
 }
 
-func (e *Engine) compileStatements() error {
-	return nil
+func (e *Engine) compileStatements() {
+	closer := e.putNonTerminalTag("statements")
+	// TODO: return以外
+	e.compileReturn()
+	closer()
 }
 
 func (e *Engine) compileDo() error {
@@ -152,8 +223,16 @@ func (e *Engine) compileWhile() error {
 	return nil
 }
 
-func (e *Engine) compileReturn() error {
-	return nil
+func (e *Engine) compileReturn() {
+	defer e.putNonTerminalTag("returnStatement")()
+	if !e.eatKeyword("return") {
+		return
+	}
+	e.putKeywordTag("return")
+	if !e.eatSymbol(";") {
+		return
+	}
+	e.putSymbolTag(";")
 }
 
 func (e *Engine) compileIf() error {
@@ -258,7 +337,7 @@ func (e *Engine) Error() error {
 
 func (e *Engine) advance() {
 	e.tz.Advance()
-	e.logCurrentToken()
+	// e.logCurrentToken()
 }
 
 func (e *Engine) logCurrentToken() {
