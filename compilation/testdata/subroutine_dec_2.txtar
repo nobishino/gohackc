@@ -20,7 +20,7 @@ class Counter {
   <subroutineDec>
     <keyword> method </keyword>
     <keyword> void </keyword>
-    <identifier> increment </identifier>
+    <identifier> add </identifier>
     <symbol> ( </symbol>
     <parameterList>
       <keyword> int </keyword>

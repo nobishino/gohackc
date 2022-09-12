@@ -260,17 +260,19 @@ func (e *Engine) compileDo() error {
 // 'let' varName ('[' expression ']')? '=' expression;
 // varName = identifier
 func (e *Engine) compileLet() {
-	defer e.putNonTerminalTag("letStatement")
+	closeLetStatement := e.putNonTerminalTag("letStatement")
+	defer closeLetStatement()
 	// let
 	if !e.eat("let") {
 		return
 	}
 	e.putKeywordTag("let")
-	// varName
+	// varName (左辺)
 	varName, ok := e.expectIdentifier()
 	if !ok {
 		return
 	}
+	e.putIdentifierTag(varName)
 	// [ がなければindexingではない
 	if e.peekKeyword("[") {
 		panic("not implemented")
@@ -280,8 +282,12 @@ func (e *Engine) compileLet() {
 		return
 	}
 	e.putSymbolTag("=")
+	// expression (右辺)
 	e.compileExpression()
-	e.putIdentifierTag(varName)
+	if !e.eat(";") {
+		return
+	}
+	e.putSymbolTag(";")
 }
 
 func (e *Engine) compileWhile() error {
