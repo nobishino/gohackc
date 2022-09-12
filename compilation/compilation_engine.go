@@ -195,9 +195,37 @@ func (e *Engine) compileSubroutineDec() {
 	closer()
 }
 
+// parameterList = ((type varName) (',' type VarName)*)?
+// type = 'int' | 'char' | 'boolean' | className
+// className = identifier
+// varName = identifier
 func (e *Engine) compileParameterList() {
-	// TODO: implement
 	defer e.putNonTerminalTag("parameterList")()
+	// parameterListが空であることとこの時点でSymbolであることは同値
+	if e.tz.TokenType() == tokenizer.SYMBOL {
+		return
+	}
+	// ここに来る場合は1つ以上の(type varName)の繰り返しになる
+	switch tokenType := e.tz.TokenType(); tokenType {
+	case tokenizer.KEYWORD:
+		kw, _ := e.expectKeyword()
+		switch kw {
+		case "int", "boolean", "char":
+			e.putKeywordTag(kw)
+		default:
+			e.addError(errors.Errorf("unexpected keyword: %q", kw))
+			return
+		}
+	case tokenizer.IDENTIFIER:
+		typeName, _ := e.expectIdentifier()
+		e.putIdentifierTag(typeName)
+	}
+	varName, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(varName)
+	// TODO: type VarNameが2個以上のパターンに対応する
 }
 
 func (e *Engine) compileVarDec() error {
@@ -205,18 +233,61 @@ func (e *Engine) compileVarDec() error {
 }
 
 func (e *Engine) compileStatements() {
-	closer := e.putNonTerminalTag("statements")
-	// TODO: return以外
-	e.compileReturn()
-	closer()
+	defer e.putNonTerminalTag("statements")()
+Statements:
+	for e.tz.TokenType() == tokenizer.KEYWORD {
+		switch e.tz.Keyword() {
+		case tokenizer.RETURN:
+			e.compileReturn()
+		case tokenizer.WHILE:
+			e.compileWhile()
+		case tokenizer.LET:
+			e.compileLet()
+		case tokenizer.IF:
+			e.compileIf()
+		case tokenizer.DO:
+			e.compileDo()
+		default:
+			break Statements
+		}
+	}
 }
 
 func (e *Engine) compileDo() error {
 	return nil
 }
 
-func (e *Engine) compileLet() error {
-	return nil
+// 'let' varName ('[' expression ']')? '=' expression;
+// varName = identifier
+func (e *Engine) compileLet() {
+	closeLetStatement := e.putNonTerminalTag("letStatement")
+	defer closeLetStatement()
+	// let
+	if !e.eat("let") {
+		return
+	}
+	e.putKeywordTag("let")
+	// varName (左辺)
+	varName, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(varName)
+	// [ がなければindexingではない
+	if e.peekKeyword("[") {
+		panic("not implemented")
+	}
+	// =
+	if !e.eat("=") {
+		return
+	}
+	e.putSymbolTag("=")
+	// expression (右辺)
+	e.compileExpression()
+	if !e.eat(";") {
+		return
+	}
+	e.putSymbolTag(";")
 }
 
 func (e *Engine) compileWhile() error {
@@ -236,15 +307,47 @@ func (e *Engine) compileReturn() {
 }
 
 func (e *Engine) compileIf() error {
+	// if !e.eat("if") {
+	// 	return
+	// }
+	// e.putKeywordTag("if")
 	return nil
 }
 
-func (e *Engine) compileExpression() error {
-	return nil
+// expression = term (op term)*
+// op = +, -, *, /, &, |, <, >, =
+func (e *Engine) compileExpression() {
+	defer e.putNonTerminalTag("expression")()
+	e.compileTerm()
+	for {
+		op, ok := e.maybeOp()
+		if !ok {
+			break
+		}
+		e.putSymbolTag(op)
+		e.compileTerm()
+	}
 }
 
-func (e *Engine) compileTerm() error {
-	return nil
+// term = intergerConstant
+//
+//	| stringConstant
+//	| keywordConstant
+//	| varName
+//	| varName '[' expression ']'
+//	| subroutineCall
+//	| '(' expression ')'
+//	| unaryOp term
+//
+// unaryOp = '-' | '~'
+func (e *Engine) compileTerm() {
+	defer e.putNonTerminalTag("term")()
+	// TODO: varName以外を実装する
+	varName, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(varName)
 }
 
 func (e *Engine) compileExpressionList() error {
@@ -302,6 +405,13 @@ func (e *Engine) expectKeyword() (string, bool) {
 	return value, true
 }
 
+func (e *Engine) peekKeyword(kw string) bool {
+	if e.tz.TokenType() != tokenizer.KEYWORD {
+		return false
+	}
+	return string(e.tz.Keyword()) == kw
+}
+
 func (e *Engine) eatSymbol(value string) bool {
 	if e.tz.TokenType() != tokenizer.SYMBOL {
 		e.addError(errors.Errorf("eatSymbol() was given token type %q", e.tz.TokenType()))
@@ -313,6 +423,21 @@ func (e *Engine) eatSymbol(value string) bool {
 	}
 	e.advance()
 	return true
+}
+
+// カレントトークンがOperatorであるばあいはそれを返してtokenをすすめ、trueを返す
+// そうでない場合はfalseを返す
+func (e *Engine) maybeOp() (string, bool) {
+	if e.tz.TokenType() != tokenizer.SYMBOL {
+		return "", false
+	}
+	switch s := e.tz.Symbol(); s {
+	case "+", "-", "*", "/", "&", "|", "<", ">", "=":
+		e.advance()
+		return s, true
+	default:
+		return "", false
+	}
 }
 
 // カレントトークンがIdentiferである場合はその値とtrueをかえして次のトークンに進む
