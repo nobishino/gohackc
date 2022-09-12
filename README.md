@@ -7,4 +7,13 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 ## TODO List
 
 - [ ] Termの実装
-- [ ] 
+  - [ ] integerConstant
+  - [ ] stringConstant
+  - [ ] keywordConstant
+  - [ ] index expression
+  - [ ] subroutineCall
+  - [ ] ( expression )
+  - [ ] unaryOp term
+- [ ] subroutineCall
+- [ ] unaryOp
+- [ ] KeywordConstant
