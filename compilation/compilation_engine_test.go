@@ -20,10 +20,10 @@ func TestCompilationEngine(t *testing.T) {
 		testfile    string
 		shouldError bool
 	}{
-		// {"bare_class", OK},
-		// {"bare_class_error", NG},
-		// {"class_var_dec", OK},
-		// {"subroutine_dec", OK},
+		{"bare_class", OK},
+		{"bare_class_error", NG},
+		{"class_var_dec", OK},
+		{"subroutine_dec", OK},
 		{"subroutine_dec_2", OK},
 	}
 	for _, tc := range testcase {
