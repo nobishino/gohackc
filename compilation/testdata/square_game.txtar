@@ -1,0 +1,9 @@
+-- source.jack --
+class Main {}
+-- expect.xml --
+<class>
+  <keyword> class </keyword>
+  <identifier> Main </identifier>
+  <symbol> { </symbol>
+  <symbol> } </symbol>
+</class>
