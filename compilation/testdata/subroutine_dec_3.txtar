@@ -44,7 +44,9 @@ class Counter {
         <returnStatement>
           <keyword> return </keyword>
           <expression>
-            <integerConstant> 1 </integerConstant>
+            <term>
+              <integerConstant> 1 </integerConstant>
+            </term>
           </expression>
           <symbol> ; </symbol>
         </returnStatement>

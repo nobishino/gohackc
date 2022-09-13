@@ -29,12 +29,13 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 
 ### 式
 
-- [ ] expression
+- [x] expression
 - [ ] term
   - [ ] integerConstant
   - [ ] stringConstant
   - [ ] keywordConstant
-  - [ ] index expression
+  - [x] varName
+  - [ ] varName '[' expression ']' (index expression)
   - [ ] subroutineCall
   - [ ] ( expression )
   - [ ] unaryOp term

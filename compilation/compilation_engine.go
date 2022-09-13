@@ -329,6 +329,9 @@ func (e *Engine) compileReturn() {
 		return
 	}
 	e.putKeywordTag("return")
+	if !(e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == ";") {
+		e.compileExpression()
+	}
 	if !e.eatSymbol(";") {
 		return
 	}
@@ -370,13 +373,24 @@ func (e *Engine) compileExpression() {
 //
 // unaryOp = '-' | '~'
 func (e *Engine) compileTerm() {
-	defer e.putNonTerminalTag("term")()
-	// TODO: varName以外を実装する
-	varName, ok := e.expectIdentifier()
-	if !ok {
-		return
+	closeTerm := e.putNonTerminalTag("term")
+	defer closeTerm()
+	switch tokenType := e.tz.TokenType(); tokenType {
+	// TODO: integerConstant
+	case tokenizer.INT_CONST:
+		intConst, _ := e.expectIntegerConstant()
+		e.putIntegerConstantTag(intConst)
+		// TODO: stringConstant
+		// TODO: keywordConstant
+		// TODO: unaryOp term
+		// TODO: '(' expression ')'
+		// varName
+	case tokenizer.IDENTIFIER:
+		varName, _ := e.expectIdentifier()
+		e.putIdentifierTag(varName)
+		// TODO: varName '[' expression ']'
+		// TODO: subroutineCall
 	}
-	e.putIdentifierTag(varName)
 }
 
 func (e *Engine) compileExpressionList() error {
@@ -477,6 +491,16 @@ func (e *Engine) expectIdentifier() (string, bool) {
 		return "", false
 	}
 	value := e.tz.Identifier()
+	e.advance()
+	return value, true
+}
+
+func (e *Engine) expectIntegerConstant() (int, bool) {
+	if e.tz.TokenType() != tokenizer.INT_CONST {
+		e.addError(errors.Errorf("expectIdentifier() was given token type %q", e.tz.TokenType()))
+		return 0, false
+	}
+	value := e.tz.IntVal()
 	e.advance()
 	return value, true
 }
