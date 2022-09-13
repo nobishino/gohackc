@@ -6,14 +6,41 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 
 ## TODO List
 
-- [ ] Termの実装
-  - [ ] integerConstant
+- [ ] class
+- [ ] classVarDec
+- [ ] type
+- [ ] subroutineDec
+- [ ] parameterList
+- [ ] subroutineBody
+- [ ] varDec
+- [ ] className
+- [ ] subroutineNamee
+- [ ] varName
+
+### 文
+
+- [ ] statements
+- [ ] statement
+- [ ] letStatment
+- [ ] ifStatement
+- [x] whileStatement
+- [ ] doStatement
+- [x] returnStatement
+
+### 式
+
+- [x] expression
+- [ ] term
+  - [x] integerConstant
   - [ ] stringConstant
   - [ ] keywordConstant
-  - [ ] index expression
+  - [x] varName
+  - [ ] varName '[' expression ']' (index expression)
   - [ ] subroutineCall
   - [ ] ( expression )
   - [ ] unaryOp term
 - [ ] subroutineCall
+- [ ] expressionList
+- [ ] op
 - [ ] unaryOp
 - [ ] KeywordConstant

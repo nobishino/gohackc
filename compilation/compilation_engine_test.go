@@ -25,6 +25,7 @@ func TestCompilationEngine(t *testing.T) {
 		{"class_var_dec", OK},
 		{"subroutine_dec", OK},
 		{"subroutine_dec_2", OK},
+		{"subroutine_dec_3", OK},
 	}
 	for _, tc := range testcase {
 		t.Run(tc.testfile, func(t *testing.T) {
