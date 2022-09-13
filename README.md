@@ -25,13 +25,13 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 - [ ] ifStatement
 - [x] whileStatement
 - [ ] doStatement
-- [ ] returnStatement
+- [x] returnStatement
 
 ### 式
 
 - [x] expression
 - [ ] term
-  - [ ] integerConstant
+  - [x] integerConstant
   - [ ] stringConstant
   - [ ] keywordConstant
   - [x] varName
