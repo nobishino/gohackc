@@ -290,8 +290,37 @@ func (e *Engine) compileLet() {
 	e.putSymbolTag(";")
 }
 
-func (e *Engine) compileWhile() error {
-	return nil
+// whileStatement = 'while' '(' expression ')' '{' statements '}'
+func (e *Engine) compileWhile() {
+	closeWhile := e.putNonTerminalTag("whileStatement")
+	defer closeWhile()
+
+	// while
+	if !e.eatKeyword("while") {
+		return
+	}
+	e.putKeywordTag("while")
+
+	// ( expression )
+	if !e.eatSymbol("(") {
+		return
+	}
+	e.putSymbolTag("(")
+	e.compileExpression()
+	if !e.eatSymbol(")") {
+		return
+	}
+	e.putSymbolTag(")")
+
+	if !e.eatSymbol("{") {
+		return
+	}
+	e.putSymbolTag("{")
+	e.compileStatements()
+	if !e.eatSymbol("}") {
+		return
+	}
+	e.putSymbolTag("}")
 }
 
 func (e *Engine) compileReturn() {
