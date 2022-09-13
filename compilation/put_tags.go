@@ -43,7 +43,16 @@ func (e *Engine) putKeywordTag(value string) {
 }
 
 func (e *Engine) putSymbolTag(value string) {
-	e.putTerminalTag("symbol", value)
+	switch value {
+	case "<":
+		e.putTerminalTag("symbol", "&lt;")
+	case ">":
+		e.putTerminalTag("symbol", "&gt;")
+	case "&":
+		e.putTerminalTag("symbol", "&amp;")
+	default:
+		e.putTerminalTag("symbol", value)
+	}
 }
 
 func (e *Engine) putIdentifierTag(value string) {

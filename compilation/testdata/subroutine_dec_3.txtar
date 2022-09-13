@@ -30,7 +30,7 @@ class Counter {
             <term>
               <identifier> x </identifier>
             </term>
-            <symbol> < </symbol>
+            <symbol> &lt; </symbol>
             <term>
               <integerConstant> 0 </integerConstant>
             </term>
