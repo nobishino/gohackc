@@ -24,7 +24,7 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 - [ ] letStatment
 - [ ] ifStatement
 - [x] whileStatement
-- [ ] doStatement
+- [x] doStatement
 - [x] returnStatement
 
 ### 式

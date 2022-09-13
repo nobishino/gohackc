@@ -253,8 +253,72 @@ Statements:
 	}
 }
 
-func (e *Engine) compileDo() error {
-	return nil
+// 'do' subroutineCall
+func (e *Engine) compileDo() {
+	closeDo := e.putNonTerminalTag("doStatement")
+	defer closeDo()
+
+	// do
+	if !e.eatKeyword("do") {
+		return
+	}
+	e.putKeywordTag("do")
+
+	// subroutineCall
+	e.compileSubroutineCall()
+
+	// ;
+	if !e.eat(";") {
+		return
+	}
+	e.putSymbolTag(";")
+}
+
+// subroutineCall = subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
+// className, varName, subroutineNameはすべてidentifier
+func (e *Engine) compileSubroutineCall() {
+	// 開始終了タグはなし
+
+	// subroutineName, className, varName
+	ident, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(ident)
+
+	// must be '.' or '('
+	s, ok := e.expectSymbol()
+	if !ok {
+		return
+	}
+	switch s {
+	case ".": // (className | varName) . subroutineName ( expressionList )
+		e.putSymbolTag(s)
+		subRoutineName, ok := e.expectIdentifier()
+		if !ok {
+			return
+		}
+		e.putIdentifierTag(subRoutineName)
+		if !e.eat("(") {
+			return
+		}
+		e.putSymbolTag("(")
+		e.compileExpressionList()
+		if !e.eat(")") {
+			return
+		}
+		e.putSymbolTag(")")
+	case "(": // subroutineName '(' expressionList ')'
+		e.compileExpressionList()
+		if !e.eat(")") {
+			return
+		}
+		e.putSymbolTag(")")
+	default:
+		e.addError(errors.Errorf("subroutineCall: should be '(' or '.' here, but got %q", s))
+		return
+	}
+
 }
 
 // 'let' varName ('[' expression ']')? '=' expression;
@@ -393,8 +457,11 @@ func (e *Engine) compileTerm() {
 	}
 }
 
-func (e *Engine) compileExpressionList() error {
-	return nil
+// expressionList = (expression (',' expression)* )?
+// これむずかしいのでは
+// TODO: implement
+// 現在は空のパターンのみサポート
+func (e *Engine) compileExpressionList() {
 }
 
 func (e *Engine) eat(value string) bool {
@@ -468,6 +535,18 @@ func (e *Engine) eatSymbol(value string) bool {
 	return true
 }
 
+// カレントトークンがSymbolである場合はその値とtrueをかえして次のトークンに進む
+// そうでない場合は何もせずエラーを追加してfalseを返す
+func (e *Engine) expectSymbol() (string, bool) {
+	if e.tz.TokenType() != tokenizer.SYMBOL {
+		e.addError(errors.Errorf("expectSymbol() was given token type %q", e.tz.TokenType()))
+		return "", false
+	}
+	value := e.tz.Symbol()
+	e.advance()
+	return value, true
+}
+
 // カレントトークンがOperatorであるばあいはそれを返してtokenをすすめ、trueを返す
 // そうでない場合はfalseを返す
 func (e *Engine) maybeOp() (string, bool) {
@@ -487,7 +566,7 @@ func (e *Engine) maybeOp() (string, bool) {
 // そうでない場合は何もせずエラーを追加してfalseを返す
 func (e *Engine) expectIdentifier() (string, bool) {
 	if e.tz.TokenType() != tokenizer.IDENTIFIER {
-		e.addError(errors.Errorf("eatIdentifier() was given token type %q", e.tz.TokenType()))
+		e.addError(errors.Errorf("expectIdentifier() was given token type %q", e.tz.TokenType()))
 		return "", false
 	}
 	value := e.tz.Identifier()
