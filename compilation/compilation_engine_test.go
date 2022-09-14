@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-multierror"
 	"github.com/josharian/txtarfs"
 	"github.com/nobishino/gohackc/compilation"
 	"golang.org/x/tools/txtar"
@@ -35,8 +36,12 @@ func TestCompilationEngine(t *testing.T) {
 
 			e.CompileClass()
 
-			if err := e.Error(); (err != nil) != tc.shouldError {
-				t.Fatal(err)
+			err := e.Error()
+			if !tc.shouldError && err != nil {
+				fatalError(t, err)
+			}
+			if tc.shouldError && err == nil {
+				t.Fatal("should return non-nil error but got nil")
 			}
 			if tc.shouldError {
 				return
@@ -82,4 +87,16 @@ func readTestCase(t *testing.T, caseName string) (fs.File, string) {
 	}
 
 	return src, buf.String()
+}
+
+func fatalError(t *testing.T, err error) {
+	t.Helper()
+	if merr, ok := err.(*multierror.Error); ok {
+		for _, e := range merr.WrappedErrors() {
+			t.Logf("%+v\n", e)
+		}
+		t.FailNow()
+	} else {
+		t.Fatal(err)
+	}
 }
