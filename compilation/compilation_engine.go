@@ -182,7 +182,12 @@ func (e *Engine) compileSubroutineDec() {
 	}
 	e.putSymbolTag("{")
 
-	// TODO: varDec*
+	// varDec*
+	for e.tz.TokenType() == tokenizer.KEYWORD && e.tz.Keyword() == "var" {
+		e.compileVarDec()
+	}
+
+	// statements
 	e.compileStatements()
 
 	if !e.eatSymbol("}") {
@@ -228,8 +233,32 @@ func (e *Engine) compileParameterList() {
 	// TODO: type VarNameが2個以上のパターンに対応する
 }
 
-func (e *Engine) compileVarDec() error {
-	return nil
+// varDec = 'var' type identifier;
+func (e *Engine) compileVarDec() {
+	varDecCloser := e.putNonTerminalTag("varDec")
+	defer varDecCloser()
+	// 'var'
+	if !e.eatKeyword("var") {
+		return
+	}
+	e.putKeywordTag("var")
+	// type
+	typeName, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	e.putIdentifierTag(typeName)
+	// identifer
+	ident, ok := e.expectIdentifier()
+	if !ok {
+		return
+	}
+	// ;
+	if !e.eat(";") {
+		return
+	}
+	e.putSymbolTag(";")
+	e.putIdentifierTag(ident)
 }
 
 func (e *Engine) compileStatements() {

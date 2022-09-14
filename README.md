@@ -12,7 +12,7 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 - [ ] subroutineDec
 - [ ] parameterList
 - [ ] subroutineBody
-- [ ] varDec
+- [x] varDec
 - [ ] className
 - [ ] subroutineNamee
 - [ ] varName

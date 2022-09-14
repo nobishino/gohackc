@@ -45,9 +45,11 @@ func TestCompilationEngine(t *testing.T) {
 
 			err := e.Error()
 			if !tc.shouldError && err != nil {
+				t.Logf("current output:\n%s", dst.String())
 				fatalError(t, err)
 			}
 			if tc.shouldError && err == nil {
+				t.Logf("current output:\n%s", dst.String())
 				t.Fatal("should return non-nil error but got nil")
 			}
 			if tc.shouldError {
