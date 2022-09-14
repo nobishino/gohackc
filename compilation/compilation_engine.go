@@ -448,7 +448,7 @@ func (e *Engine) compileReturn() {
 
 // if '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
 func (e *Engine) compileIf() {
-	closeIf := e.putNonTerminalTag("if")
+	closeIf := e.putNonTerminalTag("ifStatement")
 	defer closeIf()
 	// if
 	if !e.eatKeyword("if") {
@@ -471,7 +471,7 @@ func (e *Engine) compileIf() {
 	e.helpCompileStatementsWithCurlyBrackets()
 
 	// (else { statements })?
-	if e.tz.TokenType() == "keyword" && e.tz.Keyword() == "else" {
+	if e.tz.TokenType() == tokenizer.KEYWORD && e.tz.Keyword() == "else" {
 		e.eatKeyword("else")
 		e.putKeywordTag("else")
 		e.helpCompileStatementsWithCurlyBrackets()
