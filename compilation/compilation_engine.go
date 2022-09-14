@@ -138,12 +138,14 @@ ParseVarNames:
 func (e *Engine) compileSubroutineDec() {
 	closer := e.putNonTerminalTag("subroutineDec")
 
+	// 'constructor' | 'function' | 'method'
 	kw, ok := e.expectKeyword()
 	if !ok {
 		return
 	}
 	e.putKeywordTag(kw)
 
+	// 'void' | 'type'
 	switch tokenType := e.tz.TokenType(); tokenType {
 	case tokenizer.KEYWORD:
 		kw, _ := e.expectKeyword()
@@ -154,17 +156,20 @@ func (e *Engine) compileSubroutineDec() {
 			e.addError(errors.Errorf("unexpected keyword: %q", kw))
 		}
 	case tokenizer.IDENTIFIER:
-		// TODO: implement <- classNameのばあい
+		className, _ := e.expectIdentifier()
+		e.putIdentifierTag(className)
 	default:
-		e.addError(errors.Errorf("unexpected token type %q", tokenType))
+		e.addError(errors.Errorf("unexpected token type %q, expecting ('void' | type).", tokenType))
 	}
 
+	// subroutineName
 	subroutineName, ok := e.expectIdentifier()
 	if !ok {
 		return
 	}
 	e.putIdentifierTag(subroutineName)
 
+	// '(' parameterList ')'
 	if !e.eatSymbol("(") {
 		return
 	}
@@ -353,6 +358,7 @@ func (e *Engine) helpCompileSubroutineCall() {
 		}
 		e.putSymbolTag(")")
 	case "(": // subroutineName '(' expressionList ')'
+		e.putSymbolTag(s)
 		e.compileExpressionList()
 		if !e.eat(")") {
 			return
