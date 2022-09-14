@@ -309,7 +309,7 @@ func (e *Engine) compileDo() {
 	e.putKeywordTag("do")
 
 	// subroutineCall
-	e.compileSubroutineCall()
+	e.helpCompileSubroutineCall()
 
 	// ;
 	if !e.eat(";") {
@@ -320,7 +320,7 @@ func (e *Engine) compileDo() {
 
 // subroutineCall = subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
 // className, varName, subroutineNameはすべてidentifier
-func (e *Engine) compileSubroutineCall() {
+func (e *Engine) helpCompileSubroutineCall() {
 	// 開始終了タグはなし
 
 	// subroutineName, className, varName
@@ -543,6 +543,21 @@ func (e *Engine) compileTerm() {
 // TODO: implement
 // 現在は空のパターンのみサポート
 func (e *Engine) compileExpressionList() {
+	closeExpressionList := e.putNonTerminalTag("expressionList")
+	defer closeExpressionList()
+	// FIXME:
+	// expressionが１つもない場合はsymbol ) がカレントトークンであると仮定する←ただしい？
+	if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == ")" {
+		return
+	}
+	for {
+		e.compileExpression()
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "," {
+			e.advance()
+		} else {
+			return
+		}
+	}
 }
 
 func (e *Engine) eat(value string) bool {
