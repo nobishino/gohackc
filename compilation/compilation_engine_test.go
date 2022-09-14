@@ -28,7 +28,7 @@ func TestCompilationEngine(t *testing.T) {
 		{"subroutine_dec_2", OK},
 		{"subroutine_dec_3", OK},
 		{"exp_less_square_main", OK},
-		// {"exp_less_square_game", OK},
+		{"exp_less_square_game", OK},
 		// {"exp_less_square_square", OK},
 		// {"array_test", OK},
 		// {"square_main", OK},
