@@ -242,23 +242,38 @@ func (e *Engine) compileVarDec() {
 		return
 	}
 	e.putKeywordTag("var")
+
 	// type
-	typeName, ok := e.expectIdentifier()
-	if !ok {
-		return
-	}
-	e.putIdentifierTag(typeName)
+	e.helpCompileType()
+
 	// identifer
 	ident, ok := e.expectIdentifier()
 	if !ok {
 		return
 	}
+	e.putIdentifierTag(ident)
+
 	// ;
 	if !e.eat(";") {
 		return
 	}
 	e.putSymbolTag(";")
-	e.putIdentifierTag(ident)
+}
+
+// type =
+func (e *Engine) helpCompileType() {
+	switch tp := e.tz.TokenType(); tp {
+	case tokenizer.IDENTIFIER:
+		typeName, _ := e.expectIdentifier()
+		e.putIdentifierTag(typeName)
+	case tokenizer.KEYWORD:
+		switch kw, _ := e.expectKeyword(); kw {
+		case "int", "boolean", "char":
+			e.putKeywordTag(kw)
+		default:
+			e.addError(errors.Errorf("expect int, boolean, or char. but got keyword %q", kw))
+		}
+	}
 }
 
 func (e *Engine) compileStatements() {
@@ -431,12 +446,49 @@ func (e *Engine) compileReturn() {
 	e.putSymbolTag(";")
 }
 
-func (e *Engine) compileIf() error {
-	// if !e.eat("if") {
-	// 	return
-	// }
-	// e.putKeywordTag("if")
-	return nil
+// if '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
+func (e *Engine) compileIf() {
+	closeIf := e.putNonTerminalTag("if")
+	defer closeIf()
+	// if
+	if !e.eatKeyword("if") {
+		return
+	}
+	e.putKeywordTag("if")
+
+	// ( expression )
+	if !e.eatSymbol("(") {
+		return
+	}
+	e.putSymbolTag("(")
+	e.compileExpression()
+	if !e.eatSymbol(")") {
+		return
+	}
+	e.putSymbolTag(")")
+
+	// { statements }
+	e.helpCompileStatementsWithCurlyBrackets()
+
+	// (else { statements })?
+	if e.tz.TokenType() == "keyword" && e.tz.Keyword() == "else" {
+		e.eatKeyword("else")
+		e.putKeywordTag("else")
+		e.helpCompileStatementsWithCurlyBrackets()
+	}
+
+}
+
+func (e *Engine) helpCompileStatementsWithCurlyBrackets() {
+	if !e.eatSymbol("{") {
+		return
+	}
+	e.putSymbolTag("{")
+	e.compileStatements()
+	if !e.eatSymbol("}") {
+		return
+	}
+	e.putSymbolTag("}")
 }
 
 // expression = term (op term)*
