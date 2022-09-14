@@ -27,6 +27,13 @@ func TestCompilationEngine(t *testing.T) {
 		{"subroutine_dec", OK},
 		{"subroutine_dec_2", OK},
 		{"subroutine_dec_3", OK},
+		{"exp_less_square_main", OK},
+		// {"exp_less_square_game", OK},
+		// {"exp_less_square_square", OK},
+		// {"array_test", OK},
+		// {"square_main", OK},
+		// {"square_game", OK},
+		// {"square_square", OK},
 	}
 	for _, tc := range testcase {
 		t.Run(tc.testfile, func(t *testing.T) {
@@ -38,9 +45,11 @@ func TestCompilationEngine(t *testing.T) {
 
 			err := e.Error()
 			if !tc.shouldError && err != nil {
+				t.Logf("current output:\n%s", dst.String())
 				fatalError(t, err)
 			}
 			if tc.shouldError && err == nil {
+				t.Logf("current output:\n%s", dst.String())
 				t.Fatal("should return non-nil error but got nil")
 			}
 			if tc.shouldError {
