@@ -96,5 +96,7 @@ func fatalError(t *testing.T, err error) {
 			t.Logf("%+v\n", e)
 		}
 		t.FailNow()
+	} else {
+		t.Fatal(err)
 	}
 }
