@@ -576,20 +576,17 @@ func (e *Engine) compileTerm() {
 }
 
 // expressionList = (expression (',' expression)* )?
-// これむずかしいのでは
-// TODO: implement
-// 現在は空のパターンのみサポート
 func (e *Engine) compileExpressionList() {
 	closeExpressionList := e.putNonTerminalTag("expressionList")
 	defer closeExpressionList()
-	// FIXME:
-	// expressionが１つもない場合はsymbol ) がカレントトークンであると仮定する←ただしい？
+	// TODO: expressionが１つもない場合はsymbol ) がカレントトークンであると仮定する←ただしい？
 	if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == ")" {
 		return
 	}
 	for {
 		e.compileExpression()
 		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "," {
+			e.putSymbolTag(",")
 			e.advance()
 		} else {
 			return
