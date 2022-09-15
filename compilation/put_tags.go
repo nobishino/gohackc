@@ -1,7 +1,6 @@
 package compilation
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -14,9 +13,6 @@ func (e *Engine) indent() string {
 }
 
 func (e *Engine) putNonTerminalTag(name string) func() {
-	fmt.Println("OPEN putNonTerminalTag:", name)
-	defer fmt.Println("CLOSE putNonTerminalTag:", name)
-
 	noop := func() {}
 	if _, err := io.WriteString(e.dst, e.indent()+"<"+name+">\n"); err != nil {
 		e.addError(errors.WithStack(err))

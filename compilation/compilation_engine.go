@@ -2,9 +2,7 @@
 package compilation
 
 import (
-	"fmt"
 	"io"
-	"log"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/nobishino/gohackc/tokenizer"
@@ -93,13 +91,13 @@ func (e *Engine) compileClassVarDec() {
 	case tokenizer.KEYWORD:
 		classVarType, ok := e.expectKeyword()
 		if !ok {
-			panic("its bug")
+			return
 		}
 		e.putKeywordTag(classVarType)
 	case tokenizer.IDENTIFIER:
 		classVarType, ok := e.expectIdentifier()
 		if !ok {
-			panic("its bug")
+			return
 		}
 		e.putIdentifierTag(classVarType)
 	default:
@@ -127,6 +125,7 @@ ParseVarNames:
 			break ParseVarNames
 		case ",":
 			e.advance()
+			e.putSymbolTag(",")
 		default:
 			e.addError(errors.Errorf("unexpected symbol value: %q", s))
 			return
@@ -216,26 +215,36 @@ func (e *Engine) compileParameterList() {
 		return
 	}
 	// ここに来る場合は1つ以上の(type varName)の繰り返しになる
-	switch tokenType := e.tz.TokenType(); tokenType {
-	case tokenizer.KEYWORD:
-		kw, _ := e.expectKeyword()
-		switch kw {
-		case "int", "boolean", "char":
-			e.putKeywordTag(kw)
-		default:
-			e.addError(errors.Errorf("unexpected keyword: %q", kw))
+parameters:
+	for {
+		switch tokenType := e.tz.TokenType(); tokenType {
+		case tokenizer.KEYWORD:
+			kw, _ := e.expectKeyword()
+			switch kw {
+			case "int", "boolean", "char":
+				e.putKeywordTag(kw)
+			default:
+				e.addError(errors.Errorf("unexpected keyword: %q", kw))
+				return
+			}
+		case tokenizer.IDENTIFIER:
+			typeName, _ := e.expectIdentifier()
+			e.putIdentifierTag(typeName)
+		}
+		varName, ok := e.expectIdentifier()
+		if !ok {
 			return
 		}
-	case tokenizer.IDENTIFIER:
-		typeName, _ := e.expectIdentifier()
-		e.putIdentifierTag(typeName)
+		e.putIdentifierTag(varName)
+
+		// type VarNameが2個以上のパターンに対応する
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() != "," {
+			break parameters
+		} else {
+			e.eatSymbol(",")
+			e.putSymbolTag(",")
+		}
 	}
-	varName, ok := e.expectIdentifier()
-	if !ok {
-		return
-	}
-	e.putIdentifierTag(varName)
-	// TODO: type VarNameが2個以上のパターンに対応する
 }
 
 // varDec = 'var' type identifier;
@@ -527,15 +536,36 @@ func (e *Engine) compileTerm() {
 	closeTerm := e.putNonTerminalTag("term")
 	defer closeTerm()
 	switch tokenType := e.tz.TokenType(); tokenType {
-	// TODO: integerConstant
+	// integerConstant
 	case tokenizer.INT_CONST:
 		intConst, _ := e.expectIntegerConstant()
 		e.putIntegerConstantTag(intConst)
-		// TODO: stringConstant
-		// TODO: keywordConstant
-		// TODO: unaryOp term
-		// TODO: '(' expression ')'
-		// varName
+	// stringConstant
+	case tokenizer.STRING_CONST:
+		stringConst, _ := e.expectIntegerConstant()
+		e.putIntegerConstantTag(stringConst)
+	// keywordConstant
+	case tokenizer.KEYWORD:
+		switch kw, _ := e.expectKeyword(); kw {
+		case "true", "false", "null", "this":
+			e.putKeywordTag(kw)
+		default:
+			e.addError(errors.Errorf("expect keyword constant but got keyword %q", kw))
+			return
+		}
+	case tokenizer.SYMBOL:
+		// unaryOp term
+		switch symbol, _ := e.expectSymbol(); symbol {
+		case "-", "~":
+			e.putSymbolTag(symbol)
+		// '(' expression ')'
+		case "(":
+			e.putSymbolTag(symbol)
+			e.compileExpression()
+			e.eatSymbol(")")
+			e.putSymbolTag(")")
+		}
+	// varName
 	case tokenizer.IDENTIFIER:
 		varName, _ := e.expectIdentifier()
 		e.putIdentifierTag(varName)
@@ -545,20 +575,17 @@ func (e *Engine) compileTerm() {
 }
 
 // expressionList = (expression (',' expression)* )?
-// これむずかしいのでは
-// TODO: implement
-// 現在は空のパターンのみサポート
 func (e *Engine) compileExpressionList() {
 	closeExpressionList := e.putNonTerminalTag("expressionList")
 	defer closeExpressionList()
-	// FIXME:
-	// expressionが１つもない場合はsymbol ) がカレントトークンであると仮定する←ただしい？
+	// TODO: expressionが１つもない場合はsymbol ) がカレントトークンであると仮定する←ただしい？
 	if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == ")" {
 		return
 	}
 	for {
 		e.compileExpression()
 		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "," {
+			e.putSymbolTag(",")
 			e.advance()
 		} else {
 			return
@@ -696,25 +723,4 @@ func (e *Engine) Error() error {
 
 func (e *Engine) advance() {
 	e.tz.Advance()
-	// e.logCurrentToken()
-}
-
-func (e *Engine) logCurrentToken() {
-	prefix := "[logCurrentToken] "
-	switch tp := e.tz.TokenType(); tp {
-	case tokenizer.KEYWORD:
-		log.Printf(prefix+"Keyword: %q", e.tz.Keyword())
-	case tokenizer.SYMBOL:
-		log.Printf(prefix+"Symbol: %q", e.tz.Symbol())
-	case tokenizer.IDENTIFIER:
-		log.Printf(prefix+"Identifier: %q", e.tz.Identifier())
-	case tokenizer.INT_CONST:
-		log.Printf(prefix+"Integer Constant: %q", e.tz.Identifier())
-	case tokenizer.STRING_CONST:
-		log.Printf(prefix+"String constant: %q", e.tz.Identifier())
-	case tokenizer.EOF:
-		log.Print(prefix + "EOF")
-	default:
-		panic(fmt.Sprintf(prefix+"unexpected token type %q", tp))
-	}
 }
