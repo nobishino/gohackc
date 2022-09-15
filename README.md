@@ -31,13 +31,13 @@ Go implementation of [From Nand to Tetris Project 10-11](https://www.nand2tetris
 - [x] expression
 - [ ] term
   - [x] integerConstant
-  - [ ] stringConstant
-  - [ ] keywordConstant
+  - [x] stringConstant
+  - [x] keywordConstant
   - [x] varName
   - [ ] varName '[' expression ']' (index expression)
   - [ ] subroutineCall
-  - [ ] ( expression )
-  - [ ] unaryOp term
+  - [x] ( expression )
+  - [x] unaryOp term
 - [ ] subroutineCall
 - [ ] expressionList
 - [ ] op

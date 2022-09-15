@@ -537,15 +537,36 @@ func (e *Engine) compileTerm() {
 	closeTerm := e.putNonTerminalTag("term")
 	defer closeTerm()
 	switch tokenType := e.tz.TokenType(); tokenType {
-	// TODO: integerConstant
+	// integerConstant
 	case tokenizer.INT_CONST:
 		intConst, _ := e.expectIntegerConstant()
 		e.putIntegerConstantTag(intConst)
-		// TODO: stringConstant
-		// TODO: keywordConstant
-		// TODO: unaryOp term
-		// TODO: '(' expression ')'
-		// varName
+	// stringConstant
+	case tokenizer.STRING_CONST:
+		stringConst, _ := e.expectIntegerConstant()
+		e.putIntegerConstantTag(stringConst)
+	// keywordConstant
+	case tokenizer.KEYWORD:
+		switch kw, _ := e.expectKeyword(); kw {
+		case "true", "false", "null", "this":
+			e.putKeywordTag(kw)
+		default:
+			e.addError(errors.Errorf("expect keyword constant but got keyword %q", kw))
+			return
+		}
+	case tokenizer.SYMBOL:
+		// unaryOp term
+		switch symbol, _ := e.expectSymbol(); symbol {
+		case "-", "~":
+			e.putSymbolTag(symbol)
+		// '(' expression ')'
+		case "(":
+			e.putSymbolTag(symbol)
+			e.compileExpression()
+			e.eatSymbol(")")
+			e.putSymbolTag(")")
+		}
+	// varName
 	case tokenizer.IDENTIFIER:
 		varName, _ := e.expectIdentifier()
 		e.putIdentifierTag(varName)
