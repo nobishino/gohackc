@@ -93,13 +93,13 @@ func (e *Engine) compileClassVarDec() {
 	case tokenizer.KEYWORD:
 		classVarType, ok := e.expectKeyword()
 		if !ok {
-			panic("its bug")
+			return
 		}
 		e.putKeywordTag(classVarType)
 	case tokenizer.IDENTIFIER:
 		classVarType, ok := e.expectIdentifier()
 		if !ok {
-			panic("its bug")
+			return
 		}
 		e.putIdentifierTag(classVarType)
 	default:
@@ -127,6 +127,7 @@ ParseVarNames:
 			break ParseVarNames
 		case ",":
 			e.advance()
+			e.putSymbolTag(",")
 		default:
 			e.addError(errors.Errorf("unexpected symbol value: %q", s))
 			return
