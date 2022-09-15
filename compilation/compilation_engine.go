@@ -216,26 +216,36 @@ func (e *Engine) compileParameterList() {
 		return
 	}
 	// ここに来る場合は1つ以上の(type varName)の繰り返しになる
-	switch tokenType := e.tz.TokenType(); tokenType {
-	case tokenizer.KEYWORD:
-		kw, _ := e.expectKeyword()
-		switch kw {
-		case "int", "boolean", "char":
-			e.putKeywordTag(kw)
-		default:
-			e.addError(errors.Errorf("unexpected keyword: %q", kw))
+parameters:
+	for {
+		switch tokenType := e.tz.TokenType(); tokenType {
+		case tokenizer.KEYWORD:
+			kw, _ := e.expectKeyword()
+			switch kw {
+			case "int", "boolean", "char":
+				e.putKeywordTag(kw)
+			default:
+				e.addError(errors.Errorf("unexpected keyword: %q", kw))
+				return
+			}
+		case tokenizer.IDENTIFIER:
+			typeName, _ := e.expectIdentifier()
+			e.putIdentifierTag(typeName)
+		}
+		varName, ok := e.expectIdentifier()
+		if !ok {
 			return
 		}
-	case tokenizer.IDENTIFIER:
-		typeName, _ := e.expectIdentifier()
-		e.putIdentifierTag(typeName)
+		e.putIdentifierTag(varName)
+
+		// type VarNameが2個以上のパターンに対応する
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() != "," {
+			break parameters
+		} else {
+			e.eatSymbol(",")
+			e.putSymbolTag(",")
+		}
 	}
-	varName, ok := e.expectIdentifier()
-	if !ok {
-		return
-	}
-	e.putIdentifierTag(varName)
-	// TODO: type VarNameが2個以上のパターンに対応する
 }
 
 // varDec = 'var' type identifier;
