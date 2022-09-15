@@ -2,9 +2,7 @@
 package compilation
 
 import (
-	"fmt"
 	"io"
-	"log"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/nobishino/gohackc/tokenizer"
@@ -725,25 +723,4 @@ func (e *Engine) Error() error {
 
 func (e *Engine) advance() {
 	e.tz.Advance()
-	// e.logCurrentToken()
-}
-
-func (e *Engine) logCurrentToken() {
-	prefix := "[logCurrentToken] "
-	switch tp := e.tz.TokenType(); tp {
-	case tokenizer.KEYWORD:
-		log.Printf(prefix+"Keyword: %q", e.tz.Keyword())
-	case tokenizer.SYMBOL:
-		log.Printf(prefix+"Symbol: %q", e.tz.Symbol())
-	case tokenizer.IDENTIFIER:
-		log.Printf(prefix+"Identifier: %q", e.tz.Identifier())
-	case tokenizer.INT_CONST:
-		log.Printf(prefix+"Integer Constant: %q", e.tz.Identifier())
-	case tokenizer.STRING_CONST:
-		log.Printf(prefix+"String constant: %q", e.tz.Identifier())
-	case tokenizer.EOF:
-		log.Print(prefix + "EOF")
-	default:
-		panic(fmt.Sprintf(prefix+"unexpected token type %q", tp))
-	}
 }
