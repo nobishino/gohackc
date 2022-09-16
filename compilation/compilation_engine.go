@@ -580,6 +580,7 @@ func (e *Engine) compileTerm() {
 		switch symbol, _ := e.expectSymbol(); symbol {
 		case "-", "~":
 			e.putSymbolTag(symbol)
+			e.compileTerm()
 		// '(' expression ')'
 		case "(":
 			e.putSymbolTag(symbol)
