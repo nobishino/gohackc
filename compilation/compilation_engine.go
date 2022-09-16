@@ -247,7 +247,7 @@ parameters:
 	}
 }
 
-// varDec = 'var' type identifier;
+// varDec = 'var' type varName (',' varName)* ';'
 func (e *Engine) compileVarDec() {
 	varDecCloser := e.putNonTerminalTag("varDec")
 	defer varDecCloser()
@@ -260,18 +260,29 @@ func (e *Engine) compileVarDec() {
 	// type
 	e.helpCompileType()
 
-	// identifer
-	ident, ok := e.expectIdentifier()
-	if !ok {
-		return
-	}
-	e.putIdentifierTag(ident)
+parseVarNames:
+	for {
+		// varName
+		varName, ok := e.expectIdentifier()
+		if !ok {
+			return
+		}
+		e.putIdentifierTag(varName)
 
-	// ;
-	if !e.eat(";") {
-		return
+		s, ok := e.expectSymbol()
+		if !ok {
+			return
+		}
+		switch s {
+		case ";":
+			e.putSymbolTag(s)
+			break parseVarNames
+		case ",":
+			e.putSymbolTag(s)
+		default:
+			e.addError(errors.Errorf("expect ',' or ';' but got symbol %q", s))
+		}
 	}
-	e.putSymbolTag(";")
 }
 
 // type =
@@ -396,18 +407,29 @@ func (e *Engine) compileLet() {
 		return
 	}
 	e.putIdentifierTag(varName)
-	// [ がなければindexingではない
-	if e.peekKeyword("[") {
-		panic("not implemented")
-	}
-	// =
-	if !e.eat("=") {
+	s, ok := e.expectSymbol()
+	if !ok {
 		return
 	}
-	e.putSymbolTag("=")
+	switch s {
+	case "[": // '[' expresssion ']'
+		e.putSymbolTag("[")
+		e.compileExpression()
+		if !e.eatSymbol("]") {
+			return
+		}
+		e.putSymbolTag("]")
+		if !e.eatSymbol("=") {
+			return
+		}
+		e.putSymbolTag("=")
+	case "=":
+		e.putSymbolTag("=")
+	}
+
 	// expression (右辺)
 	e.compileExpression()
-	if !e.eat(";") {
+	if !e.eatSymbol(";") {
 		return
 	}
 	e.putSymbolTag(";")
@@ -542,8 +564,8 @@ func (e *Engine) compileTerm() {
 		e.putIntegerConstantTag(intConst)
 	// stringConstant
 	case tokenizer.STRING_CONST:
-		stringConst, _ := e.expectIntegerConstant()
-		e.putIntegerConstantTag(stringConst)
+		stringConst, _ := e.expectStringConstant()
+		e.putStringConstantTag(stringConst)
 	// keywordConstant
 	case tokenizer.KEYWORD:
 		switch kw, _ := e.expectKeyword(); kw {
@@ -567,10 +589,47 @@ func (e *Engine) compileTerm() {
 		}
 	// varName
 	case tokenizer.IDENTIFIER:
-		varName, _ := e.expectIdentifier()
-		e.putIdentifierTag(varName)
-		// TODO: varName '[' expression ']'
-		// TODO: subroutineCall
+		ident, _ := e.expectIdentifier()
+		e.putIdentifierTag(ident)
+		// varName '[' expressionList ']'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "[" {
+			e.advance()
+			e.putSymbolTag("[")
+			e.compileExpression()
+			if !e.eatSymbol("]") {
+				return
+			}
+			e.putSymbolTag("]")
+		}
+		// subroutineCall
+		// subroutineName '(' expressionList ')'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "(" {
+			e.advance()
+			e.putSymbolTag("(")
+			e.compileExpressionList()
+			if !e.eatSymbol(")") {
+				return
+			}
+		}
+		// (className | varName) '.' subroutineName '(' expressionList ')'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "." {
+			e.advance()
+			e.putSymbolTag(".")
+			subroutineName, ok := e.expectIdentifier()
+			if !ok {
+				return
+			}
+			e.putIdentifierTag(subroutineName)
+			if !e.eatSymbol("(") {
+				return
+			}
+			e.putSymbolTag("(")
+			e.compileExpressionList()
+			if !e.eatSymbol(")") {
+				return
+			}
+			e.putSymbolTag(")")
+		}
 	}
 }
 
@@ -709,6 +768,16 @@ func (e *Engine) expectIntegerConstant() (int, bool) {
 		return 0, false
 	}
 	value := e.tz.IntVal()
+	e.advance()
+	return value, true
+}
+
+func (e *Engine) expectStringConstant() (string, bool) {
+	if e.tz.TokenType() != tokenizer.STRING_CONST {
+		e.addError(errors.Errorf("expectIdentifier() was given token type %q", e.tz.TokenType()))
+		return "", false
+	}
+	value := e.tz.StringVal()
 	e.advance()
 	return value, true
 }
