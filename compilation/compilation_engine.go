@@ -553,8 +553,8 @@ func (e *Engine) compileTerm() {
 		e.putIntegerConstantTag(intConst)
 	// stringConstant
 	case tokenizer.STRING_CONST:
-		stringConst, _ := e.expectIntegerConstant()
-		e.putIntegerConstantTag(stringConst)
+		stringConst, _ := e.expectStringConstant()
+		e.putStringConstantTag(stringConst)
 	// keywordConstant
 	case tokenizer.KEYWORD:
 		switch kw, _ := e.expectKeyword(); kw {
@@ -757,6 +757,16 @@ func (e *Engine) expectIntegerConstant() (int, bool) {
 		return 0, false
 	}
 	value := e.tz.IntVal()
+	e.advance()
+	return value, true
+}
+
+func (e *Engine) expectStringConstant() (string, bool) {
+	if e.tz.TokenType() != tokenizer.STRING_CONST {
+		e.addError(errors.Errorf("expectIdentifier() was given token type %q", e.tz.TokenType()))
+		return "", false
+	}
+	value := e.tz.StringVal()
 	e.advance()
 	return value, true
 }
