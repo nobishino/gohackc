@@ -578,10 +578,47 @@ func (e *Engine) compileTerm() {
 		}
 	// varName
 	case tokenizer.IDENTIFIER:
-		varName, _ := e.expectIdentifier()
-		e.putIdentifierTag(varName)
-		// TODO: varName '[' expression ']'
-		// TODO: subroutineCall
+		ident, _ := e.expectIdentifier()
+		e.putIdentifierTag(ident)
+		// varName '[' expressionList ']'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "[" {
+			e.advance()
+			e.putSymbolTag("[")
+			e.compileExpression()
+			if !e.eatSymbol("]") {
+				return
+			}
+			e.putSymbolTag("]")
+		}
+		// subroutineCall
+		// subroutineName '(' expressionList ')'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "(" {
+			e.advance()
+			e.putSymbolTag("(")
+			e.compileExpressionList()
+			if !e.eatSymbol(")") {
+				return
+			}
+		}
+		// (className | varName) '.' subroutineName '(' expressionList ')'
+		if e.tz.TokenType() == tokenizer.SYMBOL && e.tz.Symbol() == "." {
+			e.advance()
+			e.putSymbolTag(".")
+			subroutineName, ok := e.expectIdentifier()
+			if !ok {
+				return
+			}
+			e.putIdentifierTag(subroutineName)
+			if !e.eatSymbol("(") {
+				return
+			}
+			e.putSymbolTag("(")
+			e.compileExpressionList()
+			if !e.eatSymbol(")") {
+				return
+			}
+			e.putSymbolTag(")")
+		}
 	}
 }
 
