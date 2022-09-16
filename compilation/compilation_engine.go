@@ -247,7 +247,7 @@ parameters:
 	}
 }
 
-// varDec = 'var' type identifier;
+// varDec = 'var' type varName (',' varName)* ';'
 func (e *Engine) compileVarDec() {
 	varDecCloser := e.putNonTerminalTag("varDec")
 	defer varDecCloser()
@@ -260,18 +260,29 @@ func (e *Engine) compileVarDec() {
 	// type
 	e.helpCompileType()
 
-	// identifer
-	ident, ok := e.expectIdentifier()
-	if !ok {
-		return
-	}
-	e.putIdentifierTag(ident)
+parseVarNames:
+	for {
+		// varName
+		varName, ok := e.expectIdentifier()
+		if !ok {
+			return
+		}
+		e.putIdentifierTag(varName)
 
-	// ;
-	if !e.eat(";") {
-		return
+		s, ok := e.expectSymbol()
+		if !ok {
+			return
+		}
+		switch s {
+		case ";":
+			e.putSymbolTag(s)
+			break parseVarNames
+		case ",":
+			e.putSymbolTag(s)
+		default:
+			e.addError(errors.Errorf("expect ',' or ';' but got symbol %q", s))
+		}
 	}
-	e.putSymbolTag(";")
 }
 
 // type =
