@@ -33,7 +33,7 @@ func TestCompilationEngine(t *testing.T) {
 		{"array_test", OK},
 		{"square_main", OK},
 		{"square_game", OK},
-		// {"square_square", OK},
+		{"square_square", OK},
 	}
 	for _, tc := range testcase {
 		t.Run(tc.testfile, func(t *testing.T) {
