@@ -407,18 +407,29 @@ func (e *Engine) compileLet() {
 		return
 	}
 	e.putIdentifierTag(varName)
-	// [ がなければindexingではない
-	if e.peekKeyword("[") {
-		panic("not implemented")
-	}
-	// =
-	if !e.eat("=") {
+	s, ok := e.expectSymbol()
+	if !ok {
 		return
 	}
-	e.putSymbolTag("=")
+	switch s {
+	case "[": // '[' expresssion ']'
+		e.putSymbolTag("[")
+		e.compileExpression()
+		if !e.eatSymbol("]") {
+			return
+		}
+		e.putSymbolTag("]")
+		if !e.eatSymbol("=") {
+			return
+		}
+		e.putSymbolTag("=")
+	case "=":
+		e.putSymbolTag("=")
+	}
+
 	// expression (右辺)
 	e.compileExpression()
-	if !e.eat(";") {
+	if !e.eatSymbol(";") {
 		return
 	}
 	e.putSymbolTag(";")
